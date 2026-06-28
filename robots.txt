@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://binehold-coder.github.io/naza/sitemap.xml
