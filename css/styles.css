@@ -10932,6 +10932,9 @@ header.masthead {
   background-position: center center;
   background-size: cover;
 }
+html[lang="uk"] header.masthead {
+  background-image: linear-gradient(rgba(0, 0, 0, 0.36), rgba(0, 0, 0, 0.36)), url("../assets/img/header-bg.jpg");
+}
 header.masthead .masthead-subheading {
   font-size: 1.5rem;
   font-style: italic;
