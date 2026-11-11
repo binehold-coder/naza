@@ -1,0 +1,27 @@
+<nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top" id="mainNav">
+    <div class="container">
+        <a class="navbar-brand" href="{{ page_prefix }}index.html">
+            <img loading="lazy" decoding="async" src="{{ asset_prefix }}assets/img/logo.png" alt="Naza Couture Logo" />
+        </a>
+        <span class="brand-title text-uppercase d-none d-sm-inline-block">{{ site.brand.name }}</span>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Menu">
+            Menu <i class="fas fa-bars ms-1"></i>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarResponsive">
+            <ul class="navbar-nav text-uppercase ms-auto py-4 py-lg-0">
+                <li class="nav-item"><a class="nav-link active" href="{{ page_prefix }}index.html" aria-current="page">{{ site.navigation.home[lang] }}</a></li>
+                <li class="nav-item"><a class="nav-link" href="{{ page_prefix }}services.html">{{ site.navigation.services[lang] }}</a></li>
+                <li class="nav-item"><a class="nav-link" href="{{ page_prefix }}portfolio.html">{{ site.navigation.portfolio[lang] }}</a></li>
+                <li class="nav-item"><a class="nav-link" href="{{ page_prefix }}about.html">{{ site.navigation.about[lang] }}</a></li>
+                <li class="nav-item"><a class="nav-link" href="{{ page_prefix }}contact.html">{{ site.navigation.contact[lang] }}</a></li>
+                {% if is_ua %}
+                <li class="nav-item"><a class="nav-link" href="../index.html">FR</a></li>
+                <li class="nav-item"><span class="nav-link lang-current">UA</span></li>
+                {% else %}
+                <li class="nav-item"><span class="nav-link lang-current">FR</span></li>
+                <li class="nav-item"><a class="nav-link" href="ua/index.html">UA</a></li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+</nav>
