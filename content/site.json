@@ -49,10 +49,7 @@
       "open": "09:00",
       "close": "16:00"
     },
-    "saturday": {
-      "open": "09:00",
-      "close": "12:00"
-    },
+    "saturday": null,
     "sunday": null,
     "notes": {
       "fr": null,
