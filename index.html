@@ -117,12 +117,104 @@
                             </div>
                             <div class="mb-4">
                                 <h4 class="text-uppercase text-white mb-2">Horaires d'ouverture</h4>
-                                <p class="text-white mb-1">Lundi 9h00-18h00</p>
-                                <p class="text-white mb-1">Mardi 9h00-16h00</p>
-                                <p class="text-white mb-1">Mercredi 9h00-12h00</p>
-                                <p class="text-white mb-1">Jeudi 9h00-13h00</p>
-                                <p class="text-white mb-1">Vendredi 9h00-16h00</p>
-                                <p class="text-white mb-0">Samedi 9h00-12h00</p>
+                            <p class="text-white mb-1">Lundi 9h00-18h00</p>
+                            <p class="text-white mb-1">Mardi 9h00-16h00</p>
+                            <p class="text-white mb-1">Mercredi 9h00-12h00</p>
+                            <p class="text-white mb-1">Jeudi 9h00-16h00</p>
+                            <p class="text-white mb-1">Vendredi 9h00-16h00</p>
+                            <p class="text-white mb-1">Samedi 9h00-12h00</p>
+                            <p class="text-white mb-1">Dimanche Fermé</p>
+                        <div id="schedule-exceptions-fr" class="mt-3 text-warning" aria-live="polite" hidden></div>
+<script>
+(() => {
+    const container = document.getElementById("schedule-exceptions-fr");
+    if (!container) return;
+    const exceptions = [{"id": "november-2026-12", "type": "hours", "start_date": "2026-11-12", "end_date": "2026-11-12", "hours": {"open": "09:00", "close": "13:00"}, "label": {"fr": "Horaires exceptionnels", "uk": "Особливий графік роботи"}, "description": {"fr": null, "uk": null}}, {"id": "november-2026-19", "type": "hours", "start_date": "2026-11-19", "end_date": "2026-11-19", "hours": {"open": "09:00", "close": "13:00"}, "label": {"fr": "Horaires exceptionnels", "uk": "Особливий графік роботи"}, "description": {"fr": null, "uk": null}}, {"id": "november-2026-26", "type": "hours", "start_date": "2026-11-26", "end_date": "2026-11-26", "hours": {"open": "09:00", "close": "13:00"}, "label": {"fr": "Horaires exceptionnels", "uk": "Особливий графік роботи"}, "description": {"fr": null, "uk": null}}];
+    const language = "fr";
+    const render = () => {
+        container.replaceChildren();
+        container.hidden = true;
+        const parts = Object.fromEntries(new Intl.DateTimeFormat("en-CA", {
+            timeZone: "Europe/Paris", year: "numeric", month: "2-digit", day: "2-digit"
+        }).formatToParts(new Date()).map(part => [part.type, part.value]));
+        const today = `${parts.year}-${parts.month}-${parts.day}`;
+        const visible = exceptions.filter(item => item.end_date >= today)
+            .sort((a, b) => a.start_date.localeCompare(b.start_date));
+        if (!visible.length) return;
+
+        const heading = document.createElement("h5");
+        heading.className = "text-warning mb-2";
+        heading.textContent = language === "fr" ? "Informations exceptionnelles" : "Тимчасові зміни графіка";
+        container.appendChild(heading);
+
+        const groups = new Map();
+        for (const item of visible) {
+            const key = JSON.stringify([item.type, item.hours || null, item.label, item.description || null]);
+            if (!groups.has(key)) groups.set(key, []);
+            groups.get(key).push(item);
+        }
+
+        for (const items of groups.values()) {
+            const first = items[0];
+            const line = document.createElement("p");
+            line.className = "text-warning mb-1";
+            const dates = items.map(item => {
+                const [year, month, day] = item.start_date.split("-").map(Number);
+                return { year, month, day, singleDay: item.end_date === item.start_date };
+            });
+            const sameMonth = dates.every(d =>
+                d.year === dates[0].year && d.month === dates[0].month && d.singleDay
+            );
+            let dateText;
+            if (sameMonth && dates.length > 1) {
+                const monthName = language === "fr"
+                    ? new Intl.DateTimeFormat("fr-FR", { month: "long", timeZone: "UTC" })
+                        .format(new Date(Date.UTC(dates[0].year, dates[0].month - 1, 15)))
+                    : ["січня", "лютого", "березня", "квітня", "травня", "червня", "липня", "серпня", "вересня", "жовтня", "листопада", "грудня"][dates[0].month - 1];
+                const dayList = dates.map(d => d.day);
+                const joined = language === "fr"
+                    ? dayList.slice(0, -1).join(", ") + " et " + dayList[dayList.length - 1]
+                    : dayList.slice(0, -1).join(", ") + " та " + dayList[dayList.length - 1];
+                const weekdayNumbers = dates.map(d => new Date(Date.UTC(d.year, d.month - 1, d.day)).getUTCDay());
+                const sameWeekday = weekdayNumbers.every(day => day === weekdayNumbers[0]);
+                if (sameWeekday) {
+                    const weekday = weekdayNumbers[0];
+                    const frWeekday = new Intl.DateTimeFormat("fr-FR", { weekday: "long", timeZone: "UTC" })
+                        .format(new Date(Date.UTC(dates[0].year, dates[0].month - 1, dates[0].day)));
+                    const ukWeekdays = ["неділі", "понеділки", "вівторки", "середи", "четверги", "п’ятниці", "суботи"];
+                    dateText = language === "fr"
+                        ? `Les ${frWeekday}s ${joined} ${monthName} ${dates[0].year}`
+                        : `${ukWeekdays[weekday][0].toLocaleUpperCase("uk-UA")}${ukWeekdays[weekday].slice(1)} ${joined} ${monthName} ${dates[0].year} року`;
+                } else {
+                    dateText = language === "fr"
+                        ? `Les ${joined} ${monthName} ${dates[0].year}`
+                        : `${joined} ${monthName} ${dates[0].year} року`;
+                }
+            } else {
+                const locale = language === "fr" ? "fr-FR" : "uk-UA";
+                const fmt = value => new Intl.DateTimeFormat(locale, { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" })
+                    .format(new Date(`${value}T12:00:00Z`));
+                dateText = items.map(item => item.start_date === item.end_date
+                    ? fmt(item.start_date)
+                    : (language === "fr" ? "Du " : "З ") + fmt(item.start_date) + (language === "fr" ? " au " : " до ") + fmt(item.end_date))
+                    .join(language === "fr" ? "; " : "; ");
+            }
+            if (first.type === "hours") {
+                const formatHour = value => `${value.slice(0, 2)}h${value.slice(3)}`;
+                line.textContent = language === "fr"
+                    ? `${dateText} : ouverture de ${formatHour(first.hours.open)} à ${formatHour(first.hours.close)}`
+                    : `${dateText}: працюємо з ${formatHour(first.hours.open)} до ${formatHour(first.hours.close)}`;
+            } else {
+                line.textContent = language === "fr" ? `${dateText} — atelier fermé` : `${dateText} — ательє зачинене`;
+            }
+            container.appendChild(line);
+        }
+        container.hidden = false;
+    };
+    render();
+    window.setInterval(render, 60 * 1000);
+})();
+</script>
                             </div>
                             <div class="mb-4">
                                 <h4 class="text-uppercase text-white mb-2">Suivez-nous</h4>
