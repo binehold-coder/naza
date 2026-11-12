@@ -31,7 +31,7 @@
   "opening_hours": {
     "monday": {
       "open": "09:00",
-      "close": "16:00"
+      "close": "18:00"
     },
     "tuesday": {
       "open": "09:00",
@@ -45,12 +45,16 @@
       "open": "09:00",
       "close": "16:00"
     },
-    "friday": null,
-    "saturday": null,
-    "sunday": null,
-    "notes": {
-      "fr": null,
-      "uk": null
+    "friday": {
+      "open": "09:00",
+      "close": "16:00"
+    },
+    "saturday": {
+      "open": "09:00",
+      "close": "12:00"
+    },
+    "sunday": {
+      "closed": true
     }
   },
   "navigation": {

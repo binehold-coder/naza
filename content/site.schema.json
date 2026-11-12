@@ -110,179 +110,25 @@
       ],
       "properties": {
         "monday": {
-          "oneOf": [
-            {
-              "type": "null"
-            },
-            {
-              "type": "object",
-              "required": [
-                "open",
-                "close"
-              ],
-              "properties": {
-                "open": {
-                  "type": "string",
-                  "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$"
-                },
-                "close": {
-                  "type": "string",
-                  "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$"
-                }
-              },
-              "additionalProperties": false
-            }
-          ]
+          "$ref": "#/$defs/day_schedule"
         },
         "tuesday": {
-          "oneOf": [
-            {
-              "type": "null"
-            },
-            {
-              "type": "object",
-              "required": [
-                "open",
-                "close"
-              ],
-              "properties": {
-                "open": {
-                  "type": "string",
-                  "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$"
-                },
-                "close": {
-                  "type": "string",
-                  "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$"
-                }
-              },
-              "additionalProperties": false
-            }
-          ]
+          "$ref": "#/$defs/day_schedule"
         },
         "wednesday": {
-          "oneOf": [
-            {
-              "type": "null"
-            },
-            {
-              "type": "object",
-              "required": [
-                "open",
-                "close"
-              ],
-              "properties": {
-                "open": {
-                  "type": "string",
-                  "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$"
-                },
-                "close": {
-                  "type": "string",
-                  "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$"
-                }
-              },
-              "additionalProperties": false
-            }
-          ]
+          "$ref": "#/$defs/day_schedule"
         },
         "thursday": {
-          "oneOf": [
-            {
-              "type": "null"
-            },
-            {
-              "type": "object",
-              "required": [
-                "open",
-                "close"
-              ],
-              "properties": {
-                "open": {
-                  "type": "string",
-                  "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$"
-                },
-                "close": {
-                  "type": "string",
-                  "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$"
-                }
-              },
-              "additionalProperties": false
-            }
-          ]
+          "$ref": "#/$defs/day_schedule"
         },
         "friday": {
-          "oneOf": [
-            {
-              "type": "null"
-            },
-            {
-              "type": "object",
-              "required": [
-                "open",
-                "close"
-              ],
-              "properties": {
-                "open": {
-                  "type": "string",
-                  "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$"
-                },
-                "close": {
-                  "type": "string",
-                  "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$"
-                }
-              },
-              "additionalProperties": false
-            }
-          ]
+          "$ref": "#/$defs/day_schedule"
         },
         "saturday": {
-          "oneOf": [
-            {
-              "type": "null"
-            },
-            {
-              "type": "object",
-              "required": [
-                "open",
-                "close"
-              ],
-              "properties": {
-                "open": {
-                  "type": "string",
-                  "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$"
-                },
-                "close": {
-                  "type": "string",
-                  "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$"
-                }
-              },
-              "additionalProperties": false
-            }
-          ]
+          "$ref": "#/$defs/day_schedule"
         },
         "sunday": {
-          "oneOf": [
-            {
-              "type": "null"
-            },
-            {
-              "type": "object",
-              "required": [
-                "open",
-                "close"
-              ],
-              "properties": {
-                "open": {
-                  "type": "string",
-                  "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$"
-                },
-                "close": {
-                  "type": "string",
-                  "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$"
-                }
-              },
-              "additionalProperties": false
-            }
-          ]
+          "$ref": "#/$defs/day_schedule"
         }
       },
       "additionalProperties": true
@@ -322,6 +168,44 @@
         }
       },
       "additionalProperties": false
+    },
+    "day_schedule": {
+      "description": "null = not specified (day is not displayed); {\"closed\": true} = confirmed closed; {open, close} = opening hours.",
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "required": [
+            "closed"
+          ],
+          "properties": {
+            "closed": {
+              "const": true
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "open",
+            "close"
+          ],
+          "properties": {
+            "open": {
+              "type": "string",
+              "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$"
+            },
+            "close": {
+              "type": "string",
+              "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$"
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
     }
   },
   "additionalProperties": true

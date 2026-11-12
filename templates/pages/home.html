@@ -51,47 +51,15 @@
                         <h4 class="text-uppercase text-white mb-2">{{ "Horaires d'ouverture" if lang == 'fr' else 'Графік роботи' }}</h4>
                         {% for day_key, day_label in weekdays %}
                             {% set hours = site.opening_hours[day_key] %}
-                            {% if hours %}
-                            <p class="text-white mb-1"{% if day_key == 'thursday' %} id="thursday-hours" data-day-label="{{ day_label }}"{% endif %}>{{ day_label }} {{ hours.open|hour }}-{{ hours.close|hour }}</p>
+                            {% if hours is none %}
+                            {# Not specified: day is not displayed. #}
+                            {% elif hours.get('closed') %}
+                            <p class="text-white mb-1">{{ day_label }} {{ 'Fermé' if lang == 'fr' else 'Зачинено' }}</p>
+                            {% else %}
+                            <p class="text-white mb-1">{{ day_label }} {{ hours.open|hour }}-{{ hours.close|hour }}</p>
                             {% endif %}
                         {% endfor %}
-                        <script>
-                        (() => {
-                            const thursdayRow = document.getElementById('thursday-hours');
-                            if (!thursdayRow) return;
-
-                            const exceptions = {{ exceptions | tojson }};
-                            const language = "{{ lang }}";
-                            const parts = new Intl.DateTimeFormat('en-CA', {
-                                timeZone: 'Europe/Paris',
-                                year: 'numeric', month: '2-digit', day: '2-digit'
-                            }).formatToParts(new Date());
-                            const dateParts = Object.fromEntries(parts.map(part => [part.type, part.value]));
-                            const today = `${dateParts.year}-${dateParts.month}-${dateParts.day}`;
-                            const todayUtc = new Date(`${today}T12:00:00Z`);
-                            const daysUntilThursday = (4 - todayUtc.getUTCDay() + 7) % 7;
-                            const nextThursday = new Date(todayUtc.getTime() + daysUntilThursday * 86400000)
-                                .toISOString().slice(0, 10);
-
-                            const upcomingThursdayException = exceptions
-                                .filter(item => item.start_date <= nextThursday && item.end_date >= nextThursday)
-                                .sort((a, b) => {
-                                    const aLength = (Date.parse(a.end_date) - Date.parse(a.start_date));
-                                    const bLength = (Date.parse(b.end_date) - Date.parse(b.start_date));
-                                    return aLength - bLength;
-                                })[0];
-
-                            if (!upcomingThursdayException) return;
-
-                            if (upcomingThursdayException.type === 'hours') {
-                                const hours = upcomingThursdayException.hours;
-                                const formatted = value => `${value.slice(0, 2)}h${value.slice(3)}`;
-                                thursdayRow.textContent = `${thursdayRow.dataset.dayLabel} ${formatted(hours.open)}-${formatted(hours.close)}`;
-                            } else if (upcomingThursdayException.type === 'closed') {
-                                thursdayRow.textContent = `${thursdayRow.dataset.dayLabel} ${language === 'fr' ? 'Fermé' : 'Зачинено'}`;
-                            }
-                        })();
-                        </script>
+                        {{ exception_notice | safe }}
                     </div>
                     <div class="mb-4">
                         <h4 class="text-uppercase text-white mb-2">{{ 'Suivez-nous' if lang == 'fr' else 'Підписуйтесь на нас' }}</h4>

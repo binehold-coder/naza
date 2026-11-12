@@ -22,4 +22,4 @@ Important:
 - Original index.html and ua/index.html remain untouched.
 - The build folder is a test output, not a production release.
 - This is the first migration slice, not the completed site generator.
-- Sunday remains omitted because null in site.json means unknown, not confirmed closed.
+- opening_hours day values: null = not specified (day is hidden); {"closed": true} = confirmed closed (shown as Fermé / Зачинено); {"open","close"} = hours.
