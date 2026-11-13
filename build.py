@@ -270,27 +270,70 @@ def visible_categories(data: dict) -> list:
     return result
 
 
-SERVICES_BLOCK = re.compile(
-    r"(?P<start><!-- services:start[^>]*-->)(?P<body>.*?)(?P<indent>[ \t]*)(?P<end><!-- services:end -->)",
-    re.DOTALL,
-)
+def replace_marked_block(path: Path, name: str, rendered: str):
+    """Replace the content between <!-- name:start ... --> and <!-- name:end --> with ``rendered``."""
+    if not path.is_file():
+        raise SystemExit(f"Required page is missing: {path.relative_to(OUTPUT)}")
+    html = path.read_text(encoding="utf-8")
+    pattern = re.compile(
+        rf"(?P<start><!-- {re.escape(name)}:start[^>]*-->)(?P<body>.*?)(?P<indent>[ \t]*)(?P<end><!-- {re.escape(name)}:end -->)",
+        re.DOTALL,
+    )
+    match = pattern.search(html)
+    if not match:
+        raise SystemExit(f"Could not locate the {name} block in {path.relative_to(OUTPUT)}; build stopped.")
+    indent = match.group("indent")
+    body = "\n".join((indent + line) if line.strip() else "" for line in rendered.strip("\n").split("\n"))
+    replacement = match.group("start") + "\n" + body + "\n" + indent + match.group("end")
+    path.write_text(html[:match.start()] + replacement + html[match.end():], encoding="utf-8")
 
 
 def update_services_page(path: Path, env: Environment, services: dict, lang: str):
     """Replace the block between the services markers with tables generated from JSON."""
-    if not path.is_file():
-        raise SystemExit(f"Required services page is missing: {path.relative_to(OUTPUT)}")
-    html = path.read_text(encoding="utf-8")
-    match = SERVICES_BLOCK.search(html)
-    if not match:
-        raise SystemExit(f"Could not locate the services block in {path.relative_to(OUTPUT)}; build stopped.")
-    indent = match.group("indent")
     rendered = env.get_template("partials/services_tables.html").render(
         lang=lang, categories=visible_categories(services), urgency=services["urgency"],
     )
-    body = "\n".join((indent + line) if line.strip() else "" for line in rendered.strip("\n").split("\n"))
-    replacement = match.group("start") + "\n" + body + "\n" + indent + match.group("end")
-    path.write_text(html[:match.start()] + replacement + html[match.end():], encoding="utf-8")
+    replace_marked_block(path, "services", rendered)
+
+
+# ---------- portfolio ----------
+
+PORTFOLIO_SOURCE = CONTENT / "portfolio"     # images uploaded by the bot live next to the JSON
+PORTFOLIO_OUTPUT = "assets/img/portfolio/"   # where the site serves them
+
+
+def validate_portfolio_semantics(data: dict):
+    """Rules JSON Schema cannot express; mirrored in the bot (portfolio_service.check_portfolio)."""
+    ids, files = set(), set()
+    for item in data["items"]:
+        if item["id"] in ids:
+            raise SystemExit(f"Portfolio: duplicate id {item['id']}")
+        ids.add(item["id"])
+        name = item["image"]["file"]
+        if name in files:
+            raise SystemExit(f"Portfolio: image {name} is used twice")
+        files.add(name)
+        if not (PORTFOLIO_SOURCE / name).is_file():
+            raise SystemExit(f"Portfolio: image content/portfolio/{name} is missing")
+
+
+def visible_portfolio(data: dict) -> list:
+    return [item for item in data["items"] if item["visible"]]
+
+
+def build_portfolio(env: Environment, portfolio: dict):
+    """Copy the visible images into the site and generate the grid + modals of both pages."""
+    items = visible_portfolio(portfolio)
+    target = OUTPUT / PORTFOLIO_OUTPUT
+    target.mkdir(parents=True, exist_ok=True)
+    for item in items:
+        shutil.copy2(PORTFOLIO_SOURCE / item["image"]["file"], target / item["image"]["file"])
+    for lang, page in (("fr", OUTPUT / "portfolio.html"), ("uk", OUTPUT / "ua" / "portfolio.html")):
+        context = {"lang": lang, "items": items, "asset_prefix": "../" if lang == "uk" else "",
+                   "image_dir": PORTFOLIO_OUTPUT}
+        replace_marked_block(page, "portfolio", env.get_template("partials/portfolio_cards.html").render(**context))
+        replace_marked_block(page, "portfolio-modals",
+                             env.get_template("partials/portfolio_modals.html").render(**context))
 
 
 def exception_notice_markup(lang: str) -> str:
@@ -335,6 +378,10 @@ def main():
     services = load_json("services.json")
     validate(services, "services.schema.json")
     validate_services_semantics(services)
+
+    portfolio = load_json("portfolio.json")
+    validate(portfolio, "portfolio.schema.json")
+    validate_portfolio_semantics(portfolio)
 
     env = Environment(
         loader=FileSystemLoader(TEMPLATES),
@@ -381,6 +428,9 @@ def main():
     # Price tables of the services pages come from content/services.json.
     update_services_page(OUTPUT / "services.html", env, services, "fr")
     update_services_page(OUTPUT / "ua" / "services.html", env, services, "uk")
+
+    # Portfolio grid and modals come from content/portfolio.json (+ images in content/portfolio/).
+    build_portfolio(env, portfolio)
 
     # Banner + notice data on every page; the script hides past items by date.
     inject_exceptions_everywhere(exceptions["exceptions"])

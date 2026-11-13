@@ -1,0 +1,107 @@
+{
+  "schema_version": 1,
+  "items": [
+    {
+      "id": "work-1",
+      "image": {
+        "file": "work1.jpg",
+        "width": 960,
+        "height": 1280
+      },
+      "title": {
+        "fr": "Retouche Robe de Soirée",
+        "uk": "Ремонт вечірньої сукні"
+      },
+      "description": {
+        "fr": "Ajustement sur mesure & silhouette",
+        "uk": "Підгон по фігурі та силуету"
+      },
+      "visible": true
+    },
+    {
+      "id": "work-2",
+      "image": {
+        "file": "work2.jpg",
+        "width": 960,
+        "height": 1280
+      },
+      "title": {
+        "fr": "Création de sacs et d’accessoires",
+        "uk": "Створення сумок та аксесуарів"
+      },
+      "description": {
+        "fr": "Pièces uniques, retouches précises et finitions soignées pour des sacs du quotidien ou de cérémonie",
+        "uk": "Унікальні вироби, акуратний ремонт і персоналізація сумок для щоденних та святкових образів"
+      },
+      "visible": true
+    },
+    {
+      "id": "work-3",
+      "image": {
+        "file": "work3.jpg",
+        "width": 960,
+        "height": 1280
+      },
+      "title": {
+        "fr": "Création Sur Mesure",
+        "uk": "Індивідуальне пошиття"
+      },
+      "description": {
+        "fr": "Conception de jupe droite en lin",
+        "uk": "Створення прямої спідниці з льону"
+      },
+      "visible": true
+    },
+    {
+      "id": "work-4",
+      "image": {
+        "file": "work4.jpg",
+        "width": 960,
+        "height": 1280
+      },
+      "title": {
+        "fr": "Cintrage Veste",
+        "uk": "Ушивання піджака"
+      },
+      "description": {
+        "fr": "Modification de costume homme",
+        "uk": "Переробка та підгонка чоловічого костюма"
+      },
+      "visible": true
+    },
+    {
+      "id": "work-5",
+      "image": {
+        "file": "work5.jpg",
+        "width": 960,
+        "height": 1280
+      },
+      "title": {
+        "fr": "Ameublement",
+        "uk": "Домашній текстиль"
+      },
+      "description": {
+        "fr": "Mise à la teinte & ourlets de rideaux",
+        "uk": "Підгонка довжини та підгин штор"
+      },
+      "visible": true
+    },
+    {
+      "id": "work-6",
+      "image": {
+        "file": "work6.jpg",
+        "width": 960,
+        "height": 1280
+      },
+      "title": {
+        "fr": "Savoir-Faire & Détails",
+        "uk": "Майстерність та Деталі"
+      },
+      "description": {
+        "fr": "Zoom sur la qualité de nos coutures et équipements",
+        "uk": "Ближній план на якість наших швів та обладнання"
+      },
+      "visible": true
+    }
+  ]
+}

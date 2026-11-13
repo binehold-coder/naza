@@ -1,0 +1,22 @@
+{# Portfolio grid of portfolio.html / ua/portfolio.html, rendered from content/portfolio.json. #}
+{% for item in items %}
+<div class="col-lg-4 col-sm-6 mb-4">
+    <div class="portfolio-item border rounded overflow-hidden bg-white shadow-sm">
+        <a class="portfolio-link" data-bs-toggle="modal" href="#portfolioModal-{{ item.id }}">
+            <div class="portfolio-hover">
+                <div class="portfolio-hover-content"><i class="fas fa-plus fa-3x"></i></div>
+            </div>
+            <img loading="lazy" decoding="async" class="img-fluid w-100" src="{{ asset_prefix }}{{ image_dir }}{{ item.image.file }}" width="{{ item.image.width }}" height="{{ item.image.height }}" alt="{{ item.title[lang] }}" style="height: 280px; object-fit: cover;" />
+        </a>
+        <div class="portfolio-caption p-4 text-center">
+            <div class="portfolio-caption-heading h5 text-uppercase">{{ item.title[lang] }}</div>
+{% if item.description %}
+            <div class="portfolio-caption-subheading text-muted small">{{ item.description[lang] }}</div>
+{% endif %}
+        </div>
+    </div>
+</div>
+
+{% else %}
+<div class="col-12 text-center text-muted">{{ "Nouvelles réalisations bientôt." if lang == "fr" else "Нові роботи незабаром." }}</div>
+{% endfor %}
