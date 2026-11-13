@@ -3,7 +3,7 @@
 <header class="masthead">
     <div class="container">
         <div class="masthead-subheading">{{ site.pages.home.hero_title[lang] }}</div>
-        <div class="masthead-heading text-uppercase">{{ site.pages.home.hero_subtitle[lang] }}</div>
+        <h1 class="masthead-heading text-uppercase">{{ site.pages.home.hero_subtitle[lang] }}</h1>
         <a class="btn btn-primary btn-xl text-uppercase" href="{{ page_prefix }}services.html">{{ site.pages.home.hero_cta[lang] }}</a>
     </div>
 </header>
@@ -69,9 +69,7 @@
                     </div>
                 </div>
                 <div class="col-lg-7">
-                    <div class="ratio ratio-16x9 h-100" style="min-height: 350px;">
-                        <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d697.2990051237166!2d5.859649969665708!3d45.646885135729875!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x478b09007a769fc9%3A0x4c4daf373a0dc637!2sNAZA%20COUTURE!5e0!3m2!1sfr!2sfr!4v1782716974586!5m2!1sfr!2sfr&hl=fr" style="border:0; width:100%; height:100%;" allowfullscreen="" loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe>
-                    </div>
+                    {% filter indent(20, first=true) %}{% include "partials/map.html" %}{% endfilter %}
                 </div>
             </div>
         </div>

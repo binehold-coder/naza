@@ -52,3 +52,22 @@ window.addEventListener('DOMContentLoaded', event => {
     });
 
 });
+// Click-to-load map (templates/partials/map.html): the Google iframe is created only on request,
+// so Google receives nothing (and sets no cookies) until the visitor asks for the map.
+document.addEventListener('click', event => {
+    const button = event.target.closest('[data-map-load]');
+    if (!button) {
+        return;
+    }
+    const box = button.closest('[data-map-embed]');
+    if (!box) {
+        return;
+    }
+    const iframe = document.createElement('iframe');
+    iframe.src = box.dataset.mapSrc;
+    iframe.title = box.dataset.mapTitle || 'Google Maps';
+    iframe.style.border = '0';
+    iframe.allowFullscreen = true;
+    iframe.referrerPolicy = 'strict-origin-when-cross-origin';
+    box.replaceChildren(iframe);
+});
