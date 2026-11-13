@@ -198,6 +198,101 @@ def validate_exceptions_semantics(data: dict):
             )
 
 
+PRICE_WORDS = {
+    "fr": {"from": "à partir de", "on_request": "sur demande"},
+    "uk": {"from": "від", "on_request": "за запитом"},
+}
+
+
+def format_amount(value) -> str:
+    """12 -> "12", 12.5 -> "12,50" (both languages use a decimal comma)."""
+    if float(value).is_integer():
+        return str(int(value))
+    return f"{value:.2f}".replace(".", ",")
+
+
+def format_price(price: dict, lang: str) -> str:
+    """Price cell text. Keep in sync with naza-bot app/services/services_service.py."""
+    words = PRICE_WORDS[lang]
+    kind = price["type"]
+    if kind == "fixed":
+        text = f"{format_amount(price['amount'])} €"
+    elif kind == "from":
+        text = f"{words['from']} {format_amount(price['amount'])} €"
+    elif kind == "range":
+        text = f"{format_amount(price['min'])}-{format_amount(price['max'])} €"
+    elif kind == "list":
+        text = " / ".join(f"{format_amount(a)} €" for a in price["amounts"])
+    else:
+        text = words["on_request"]
+    note = price.get("note")
+    if note:
+        text += f" {note[lang]}"
+    return text
+
+
+def validate_services_semantics(data: dict):
+    """Rules JSON Schema cannot express. Mirrored in naza-bot services_service.check_services()."""
+    seen = set()
+
+    def unique(item_id, where):
+        if item_id in seen:
+            raise SystemExit(f"Validation failed for services.json: duplicate id '{item_id}' ({where}).")
+        seen.add(item_id)
+
+    def amount_ok(value):
+        return round(value * 100) == value * 100
+
+    for c_index, category in enumerate(data["categories"]):
+        unique(category["id"], f"categories/{c_index}")
+        for i_index, item in enumerate(category["items"]):
+            where = f"categories/{c_index}/items/{i_index}"
+            unique(item["id"], where)
+            price = item["price"]
+            amounts = [price[k] for k in ("amount", "min", "max") if k in price] + price.get("amounts", [])
+            if not all(amount_ok(a) for a in amounts):
+                raise SystemExit(f"Validation failed for {where}: prices may have at most 2 decimals.")
+            if price["type"] == "range" and price["min"] >= price["max"]:
+                raise SystemExit(f"Validation failed for {where}: range minimum must be lower than maximum.")
+    for u_index, row in enumerate(data["urgency"]):
+        unique(row["id"], f"urgency/{u_index}")
+
+
+def visible_categories(data: dict) -> list:
+    """Visible categories with their visible services; categories left empty are not shown."""
+    result = []
+    for category in data["categories"]:
+        if not category["visible"]:
+            continue
+        items = [item for item in category["items"] if item["visible"]]
+        if items:
+            result.append({**category, "items": items})
+    return result
+
+
+SERVICES_BLOCK = re.compile(
+    r"(?P<start><!-- services:start[^>]*-->)(?P<body>.*?)(?P<indent>[ \t]*)(?P<end><!-- services:end -->)",
+    re.DOTALL,
+)
+
+
+def update_services_page(path: Path, env: Environment, services: dict, lang: str):
+    """Replace the block between the services markers with tables generated from JSON."""
+    if not path.is_file():
+        raise SystemExit(f"Required services page is missing: {path.relative_to(OUTPUT)}")
+    html = path.read_text(encoding="utf-8")
+    match = SERVICES_BLOCK.search(html)
+    if not match:
+        raise SystemExit(f"Could not locate the services block in {path.relative_to(OUTPUT)}; build stopped.")
+    indent = match.group("indent")
+    rendered = env.get_template("partials/services_tables.html").render(
+        lang=lang, categories=visible_categories(services), urgency=services["urgency"],
+    )
+    body = "\n".join((indent + line) if line.strip() else "" for line in rendered.strip("\n").split("\n"))
+    replacement = match.group("start") + "\n" + body + "\n" + indent + match.group("end")
+    path.write_text(html[:match.start()] + replacement + html[match.end():], encoding="utf-8")
+
+
 def exception_notice_markup(lang: str) -> str:
     """Container for the exceptions notice under the opening hours; filled by js/exceptions.js."""
     return (f'<div id="schedule-exceptions-{lang}" class="mt-3 text-warning" '
@@ -237,6 +332,10 @@ def main():
     validate(exceptions, "exceptions.schema.json")
     validate_exceptions_semantics(exceptions)
 
+    services = load_json("services.json")
+    validate(services, "services.schema.json")
+    validate_services_semantics(services)
+
     env = Environment(
         loader=FileSystemLoader(TEMPLATES),
         autoescape=select_autoescape(["html", "xml"]),
@@ -245,6 +344,7 @@ def main():
         lstrip_blocks=True,
     )
     env.filters["hour"] = format_hour
+    env.filters["price"] = format_price
     env.globals["day_sep"] = lambda lang: Markup(day_sep(lang))
 
     # Rebuild the deployable folder from the full static site on every run.
@@ -277,6 +377,10 @@ def main():
     # from the same JSON source as the generated homepages.
     update_contact_schedule(OUTPUT / "contact.html", site, "fr", exceptions["exceptions"])
     update_contact_schedule(OUTPUT / "ua" / "contact.html", site, "uk", exceptions["exceptions"])
+
+    # Price tables of the services pages come from content/services.json.
+    update_services_page(OUTPUT / "services.html", env, services, "fr")
+    update_services_page(OUTPUT / "ua" / "services.html", env, services, "uk")
 
     # Banner + notice data on every page; the script hides past items by date.
     inject_exceptions_everywhere(exceptions["exceptions"])

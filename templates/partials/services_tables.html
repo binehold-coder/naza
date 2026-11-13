@@ -1,0 +1,30 @@
+{# Price tables of services.html / ua/services.html, rendered from content/services.json. #}
+{% for category in categories %}
+<div class="mb-5">
+    <h3 class="h4 text-uppercase mb-3">{{ category.name[lang] }}</h3>
+    <div class="table-responsive shadow-sm rounded">
+        <table class="table table-hover align-middle bg-white mb-0">
+            <tbody>
+{% for item in category["items"] %}
+                <tr><td>{{ item.name[lang] }}</td><td class="text-end fw-bold text-primary">{{ item.price | price(lang) }}</td></tr>
+{% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endfor %}
+{% if urgency %}
+<div class="p-4 bg-light border rounded text-center">
+    <h3 class="h5 text-uppercase mb-3">{{ "Délais d'urgence" if lang == "fr" else "Терміновість виконання" }}</h3>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle bg-white mb-0">
+            <tbody>
+{% for row in urgency %}
+                <tr><td>{{ row.label[lang] }}</td><td class="text-end fw-bold text-primary">+{{ row.percent }} % {{ "du prix de base" if lang == "fr" else "до базової вартості" }}</td></tr>
+{% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
