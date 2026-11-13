@@ -1,0 +1,116 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Naza Couture services and prices",
+  "type": "object",
+  "required": ["schema_version", "categories", "urgency"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "const": 1 },
+    "categories": {
+      "type": "array",
+      "maxItems": 50,
+      "items": { "$ref": "#/$defs/category" }
+    },
+    "urgency": {
+      "type": "array",
+      "maxItems": 5,
+      "items": { "$ref": "#/$defs/urgency" }
+    }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]{0,23}$" },
+    "text": { "type": "string", "minLength": 1, "maxLength": 300, "pattern": "^[^<>{}]*$" },
+    "bilingual": {
+      "type": "object",
+      "required": ["fr", "uk"],
+      "additionalProperties": false,
+      "properties": {
+        "fr": { "$ref": "#/$defs/text" },
+        "uk": { "$ref": "#/$defs/text" }
+      }
+    },
+    "amount": { "type": "number", "exclusiveMinimum": 0, "maximum": 100000 },
+    "note": { "$ref": "#/$defs/bilingual" },
+    "price": {
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": { "enum": ["fixed", "from", "range", "list", "on_request"] }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "type": { "enum": ["fixed", "from"] } } },
+          "then": {
+            "required": ["amount"],
+            "additionalProperties": false,
+            "properties": { "type": true, "amount": { "$ref": "#/$defs/amount" }, "note": { "$ref": "#/$defs/note" } }
+          }
+        },
+        {
+          "if": { "properties": { "type": { "const": "range" } } },
+          "then": {
+            "required": ["min", "max"],
+            "additionalProperties": false,
+            "properties": {
+              "type": true,
+              "min": { "$ref": "#/$defs/amount" },
+              "max": { "$ref": "#/$defs/amount" },
+              "note": { "$ref": "#/$defs/note" }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "type": { "const": "list" } } },
+          "then": {
+            "required": ["amounts"],
+            "additionalProperties": false,
+            "properties": {
+              "type": true,
+              "amounts": { "type": "array", "minItems": 2, "maxItems": 5, "items": { "$ref": "#/$defs/amount" } },
+              "note": { "$ref": "#/$defs/note" }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "type": { "const": "on_request" } } },
+          "then": {
+            "additionalProperties": false,
+            "properties": { "type": true, "note": { "$ref": "#/$defs/note" } }
+          }
+        }
+      ]
+    },
+    "service": {
+      "type": "object",
+      "required": ["id", "visible", "name", "price"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "visible": { "type": "boolean" },
+        "name": { "$ref": "#/$defs/bilingual" },
+        "price": { "$ref": "#/$defs/price" }
+      }
+    },
+    "category": {
+      "type": "object",
+      "required": ["id", "visible", "name", "items"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "visible": { "type": "boolean" },
+        "name": { "$ref": "#/$defs/bilingual" },
+        "items": { "type": "array", "maxItems": 100, "items": { "$ref": "#/$defs/service" } }
+      }
+    },
+    "urgency": {
+      "type": "object",
+      "required": ["id", "percent", "label"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "percent": { "type": "integer", "minimum": 1, "maximum": 500 },
+        "label": { "$ref": "#/$defs/bilingual" }
+      }
+    }
+  }
+}

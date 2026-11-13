@@ -1,0 +1,644 @@
+{
+  "schema_version": 1,
+  "categories": [
+    {
+      "id": "cat-1",
+      "visible": true,
+      "name": {
+        "fr": "Ourlets et retouches de vêtements",
+        "uk": "Підгин та ремонт одягу"
+      },
+      "items": [
+        {
+          "id": "svc-1",
+          "visible": true,
+          "name": {
+            "fr": "Pantalon simple",
+            "uk": "Прості штани"
+          },
+          "price": {
+            "type": "fixed",
+            "amount": 12
+          }
+        },
+        {
+          "id": "svc-2",
+          "visible": true,
+          "name": {
+            "fr": "Des jeans",
+            "uk": "Джинси"
+          },
+          "price": {
+            "type": "fixed",
+            "amount": 14
+          }
+        },
+        {
+          "id": "svc-3",
+          "visible": true,
+          "name": {
+            "fr": "Pantalon large",
+            "uk": "Широкі штани"
+          },
+          "price": {
+            "type": "range",
+            "min": 15,
+            "max": 18
+          }
+        },
+        {
+          "id": "svc-4",
+          "visible": true,
+          "name": {
+            "fr": "Ourlet manuel avec conservation de l’ourlet d’origine",
+            "uk": "Ручний підгин зі збереженням оригінального краю"
+          },
+          "price": {
+            "type": "fixed",
+            "amount": 20
+          }
+        },
+        {
+          "id": "svc-5",
+          "visible": true,
+          "name": {
+            "fr": "Ourlet à la main",
+            "uk": "Підгин вручну"
+          },
+          "price": {
+            "type": "fixed",
+            "amount": 17
+          }
+        },
+        {
+          "id": "svc-6",
+          "visible": true,
+          "name": {
+            "fr": "Robe, jupe",
+            "uk": "Сукня, спідниця"
+          },
+          "price": {
+            "type": "range",
+            "min": 20,
+            "max": 40
+          }
+        },
+        {
+          "id": "svc-7",
+          "visible": true,
+          "name": {
+            "fr": "Manches",
+            "uk": "Рукави"
+          },
+          "price": {
+            "type": "list",
+            "amounts": [
+              15,
+              20,
+              30
+            ]
+          }
+        },
+        {
+          "id": "svc-8",
+          "visible": true,
+          "name": {
+            "fr": "Manteau, veste, blazer",
+            "uk": "Пальто, куртка, піджак"
+          },
+          "price": {
+            "type": "range",
+            "min": 35,
+            "max": 60
+          }
+        },
+        {
+          "id": "svc-9",
+          "visible": true,
+          "name": {
+            "fr": "Rideaux",
+            "uk": "Штори"
+          },
+          "price": {
+            "type": "from",
+            "amount": 15
+          }
+        },
+        {
+          "id": "svc-10",
+          "visible": true,
+          "name": {
+            "fr": "Ourlet de robe",
+            "uk": "Підгин сукні"
+          },
+          "price": {
+            "type": "range",
+            "min": 25,
+            "max": 40,
+            "note": {
+              "fr": "par couche",
+              "uk": "за шар"
+            }
+          }
+        },
+        {
+          "id": "svc-11",
+          "visible": true,
+          "name": {
+            "fr": "Ourlet des manches à plis boutonnées",
+            "uk": "Підгин рукавів із защипами та ґудзиками"
+          },
+          "price": {
+            "type": "fixed",
+            "amount": 35
+          }
+        },
+        {
+          "id": "svc-12",
+          "visible": true,
+          "name": {
+            "fr": "Ourlet avec reprise de fronces",
+            "uk": "Підгин зі збиранням"
+          },
+          "price": {
+            "type": "fixed",
+            "amount": 25
+          }
+        },
+        {
+          "id": "svc-13",
+          "visible": true,
+          "name": {
+            "fr": "Rallonger bas",
+            "uk": "Подовження низу"
+          },
+          "price": {
+            "type": "fixed",
+            "amount": 20
+          }
+        }
+      ]
+    },
+    {
+      "id": "cat-2",
+      "visible": true,
+      "name": {
+        "fr": "Resserrement / élargissement",
+        "uk": "Звуження / розширення"
+      },
+      "items": [
+        {
+          "id": "svc-14",
+          "visible": true,
+          "name": {
+            "fr": "Pantalon",
+            "uk": "Штани"
+          },
+          "price": {
+            "type": "from",
+            "amount": 10
+          }
+        },
+        {
+          "id": "svc-15",
+          "visible": true,
+          "name": {
+            "fr": "Jupe",
+            "uk": "Спідниця"
+          },
+          "price": {
+            "type": "from",
+            "amount": 10
+          }
+        },
+        {
+          "id": "svc-16",
+          "visible": true,
+          "name": {
+            "fr": "Robe, veste",
+            "uk": "Сукня, жакет"
+          },
+          "price": {
+            "type": "from",
+            "amount": 15
+          }
+        },
+        {
+          "id": "svc-17",
+          "visible": true,
+          "name": {
+            "fr": "Reprise largeur(s) Jambe(s) (2 côtés)",
+            "uk": "Корекція ширини штанин (з обох боків)"
+          },
+          "price": {
+            "type": "list",
+            "amounts": [
+              25,
+              33
+            ]
+          }
+        },
+        {
+          "id": "svc-18",
+          "visible": true,
+          "name": {
+            "fr": "Reprise taille (milieu dos)",
+            "uk": "Корекція талії (по центру спинки)"
+          },
+          "price": {
+            "type": "fixed",
+            "amount": 24
+          }
+        },
+        {
+          "id": "svc-19",
+          "visible": true,
+          "name": {
+            "fr": "Reprise taille milieu dos (type costume)",
+            "uk": "Корекція талії по центру спинки (тип костюма)"
+          },
+          "price": {
+            "type": "fixed",
+            "amount": 20
+          }
+        },
+        {
+          "id": "svc-20",
+          "visible": true,
+          "name": {
+            "fr": "Ajustement de la longueur d’épaule",
+            "uk": "Коригування довжини плеча"
+          },
+          "price": {
+            "type": "range",
+            "min": 25,
+            "max": 40
+          }
+        }
+      ]
+    },
+    {
+      "id": "cat-3",
+      "visible": true,
+      "name": {
+        "fr": "Réparation et petits travaux",
+        "uk": "Ремонт і дрібні роботи"
+      },
+      "items": [
+        {
+          "id": "svc-21",
+          "visible": true,
+          "name": {
+            "fr": "Couture simple",
+            "uk": "Проста строчка"
+          },
+          "price": {
+            "type": "from",
+            "amount": 3
+          }
+        },
+        {
+          "id": "svc-22",
+          "visible": true,
+          "name": {
+            "fr": "Pose de bouton de jean",
+            "uk": "Пришивання джинсового ґудзика"
+          },
+          "price": {
+            "type": "fixed",
+            "amount": 6
+          }
+        },
+        {
+          "id": "svc-23",
+          "visible": true,
+          "name": {
+            "fr": "Pose de coudières",
+            "uk": "Пришивання налокітників"
+          },
+          "price": {
+            "type": "fixed",
+            "amount": 15
+          }
+        },
+        {
+          "id": "svc-24",
+          "visible": true,
+          "name": {
+            "fr": "Couture de boutons",
+            "uk": "Пришивання ґудзиків"
+          },
+          "price": {
+            "type": "fixed",
+            "amount": 3
+          }
+        },
+        {
+          "id": "svc-25",
+          "visible": true,
+          "name": {
+            "fr": "Reprise / renfort",
+            "uk": "Підсилення / ремонт"
+          },
+          "price": {
+            "type": "range",
+            "min": 5,
+            "max": 35
+          }
+        },
+        {
+          "id": "svc-26",
+          "visible": true,
+          "name": {
+            "fr": "Remplacement d’élastique",
+            "uk": "Заміна еластичної стрічки"
+          },
+          "price": {
+            "type": "range",
+            "min": 15,
+            "max": 35
+          }
+        },
+        {
+          "id": "svc-27",
+          "visible": true,
+          "name": {
+            "fr": "Remplacement de poche",
+            "uk": "Заміна кишені"
+          },
+          "price": {
+            "type": "range",
+            "min": 25,
+            "max": 35
+          }
+        },
+        {
+          "id": "svc-28",
+          "visible": true,
+          "name": {
+            "fr": "Reprise trou + bouton",
+            "uk": "Ремонт дірки + ґудзик"
+          },
+          "price": {
+            "type": "fixed",
+            "amount": 9
+          }
+        },
+        {
+          "id": "svc-29",
+          "visible": true,
+          "name": {
+            "fr": "Couture décousue simple",
+            "uk": "Ремонт розпоротої строчки (простий)"
+          },
+          "price": {
+            "type": "fixed",
+            "amount": 4
+          }
+        },
+        {
+          "id": "svc-30",
+          "visible": true,
+          "name": {
+            "fr": "Couture décousue complexe",
+            "uk": "Ремонт розпоротої строчки (складний)"
+          },
+          "price": {
+            "type": "fixed",
+            "amount": 11
+          }
+        },
+        {
+          "id": "svc-31",
+          "visible": true,
+          "name": {
+            "fr": "Supprimer col",
+            "uk": "Видалення коміра"
+          },
+          "price": {
+            "type": "fixed",
+            "amount": 10
+          }
+        }
+      ]
+    },
+    {
+      "id": "cat-4",
+      "visible": true,
+      "name": {
+        "fr": "Remplacement de fermetures éclair",
+        "uk": "Заміна блискавок"
+      },
+      "items": [
+        {
+          "id": "svc-32",
+          "visible": true,
+          "name": {
+            "fr": "Manteau, veste",
+            "uk": "Пальто, куртка"
+          },
+          "price": {
+            "type": "range",
+            "min": 30,
+            "max": 55
+          }
+        },
+        {
+          "id": "svc-33",
+          "visible": true,
+          "name": {
+            "fr": "Pantalon",
+            "uk": "Штани"
+          },
+          "price": {
+            "type": "fixed",
+            "amount": 19
+          }
+        },
+        {
+          "id": "svc-34",
+          "visible": true,
+          "name": {
+            "fr": "Jupe",
+            "uk": "Спідниця"
+          },
+          "price": {
+            "type": "range",
+            "min": 15,
+            "max": 17
+          }
+        },
+        {
+          "id": "svc-35",
+          "visible": true,
+          "name": {
+            "fr": "Robe",
+            "uk": "Сукня"
+          },
+          "price": {
+            "type": "range",
+            "min": 15,
+            "max": 17
+          }
+        },
+        {
+          "id": "svc-36",
+          "visible": true,
+          "name": {
+            "fr": "Curseur seulement",
+            "uk": "Лише бігунок"
+          },
+          "price": {
+            "type": "fixed",
+            "amount": 6
+          }
+        },
+        {
+          "id": "svc-37",
+          "visible": true,
+          "name": {
+            "fr": "Fermeture poche",
+            "uk": "Блискавка кишені"
+          },
+          "price": {
+            "type": "range",
+            "min": 15,
+            "max": 25
+          }
+        }
+      ]
+    },
+    {
+      "id": "cat-5",
+      "visible": true,
+      "name": {
+        "fr": "Les sacs",
+        "uk": "Сумки"
+      },
+      "items": [
+        {
+          "id": "svc-38",
+          "visible": true,
+          "name": {
+            "fr": "Fermeture centrale",
+            "uk": "Центральна блискавка"
+          },
+          "price": {
+            "type": "range",
+            "min": 30,
+            "max": 40
+          }
+        },
+        {
+          "id": "svc-39",
+          "visible": true,
+          "name": {
+            "fr": "Fermeture poche",
+            "uk": "Блискавка кишені"
+          },
+          "price": {
+            "type": "range",
+            "min": 20,
+            "max": 25
+          }
+        }
+      ]
+    },
+    {
+      "id": "cat-6",
+      "visible": true,
+      "name": {
+        "fr": "Remplacement de la doublure",
+        "uk": "Заміна підкладки"
+      },
+      "items": [
+        {
+          "id": "svc-40",
+          "visible": true,
+          "name": {
+            "fr": "Manteau, veste, blazer",
+            "uk": "Пальто, куртка, піджак"
+          },
+          "price": {
+            "type": "range",
+            "min": 80,
+            "max": 140
+          }
+        },
+        {
+          "id": "svc-41",
+          "visible": true,
+          "name": {
+            "fr": "Doublure manches",
+            "uk": "Підкладка рукавів"
+          },
+          "price": {
+            "type": "fixed",
+            "amount": 40
+          }
+        }
+      ]
+    },
+    {
+      "id": "cat-7",
+      "visible": true,
+      "name": {
+        "fr": "Confection sur mesure",
+        "uk": "Індивідуальне пошиття"
+      },
+      "items": [
+        {
+          "id": "svc-42",
+          "visible": true,
+          "name": {
+            "fr": "À partir de",
+            "uk": "Від"
+          },
+          "price": {
+            "type": "fixed",
+            "amount": 30
+          }
+        }
+      ]
+    },
+    {
+      "id": "cat-8",
+      "visible": true,
+      "name": {
+        "fr": "Broderie à la main sur mesure",
+        "uk": "Ручна вишивка на замовлення"
+      },
+      "items": [
+        {
+          "id": "svc-43",
+          "visible": true,
+          "name": {
+            "fr": "Tarifs",
+            "uk": "Ціни"
+          },
+          "price": {
+            "type": "on_request"
+          }
+        }
+      ]
+    }
+  ],
+  "urgency": [
+    {
+      "id": "1h",
+      "percent": 100,
+      "label": {
+        "fr": "Livraison en 1 heure",
+        "uk": "Виконання протягом 1 години"
+      }
+    },
+    {
+      "id": "24h",
+      "percent": 50,
+      "label": {
+        "fr": "Livraison en 24 heures",
+        "uk": "Виконання протягом 24 годин"
+      }
+    }
+  ]
+}
