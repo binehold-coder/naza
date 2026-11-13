@@ -30,7 +30,8 @@
   },
   "opening_hours": {
     "monday": {
-      "closed": true
+      "open": "09:00",
+      "close": "18:00"
     },
     "tuesday": {
       "open": "09:00",
