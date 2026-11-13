@@ -161,7 +161,7 @@
             if (!lines.notice.length) continue;
             const heading = doc.createElement("h5");
             heading.className = "text-warning mb-2";
-            heading.textContent = TEXT[lang].heading;
+            heading.textContent = TEXT[lang].heading + (lang === "fr" ? "\u00a0:" : ":");
             container.appendChild(heading);
             for (const text of lines.notice) {
                 const p = doc.createElement("p");
