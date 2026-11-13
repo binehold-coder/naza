@@ -22,7 +22,7 @@ EXCLUDED_DIRS = {
 }
 EXCLUDED_FILES = {
     "build.py", "requirements.txt", "README.txt", "README.md",
-    "NAZA_TECHNICAL_AUDIT.md",
+    "NAZA_TECHNICAL_AUDIT.md", "vercel.json",
 }
 STATIC_EXTENSIONS = {
     ".html", ".htm", ".css", ".js", ".mjs", ".json", ".xml", ".txt",
@@ -124,7 +124,10 @@ def update_contact_schedule(path: Path, site: dict, lang: str, exceptions: list)
     pattern = re.compile(
         rf'(?P<heading><h4\b[^>]*>\s*{heading}\s*</h4>)'
         rf'(?P<gap>\s*)'
-        rf'(?P<rows>(?:<p\b[^>]*>.*?</p>\s*)+)',
+        rf'(?P<rows>(?:<p\b[^>]*>.*?</p>\s*)+)'
+        # A previously generated exceptions notice may already follow the rows
+        # in the source HTML; consume it so it is replaced, not duplicated.
+        rf'(?P<notice><div\b[^>]*\bid="schedule-exceptions-\w+"[^>]*>\s*</div>\s*<script>.*?</script>)?',
         re.IGNORECASE | re.DOTALL,
     )
     match = pattern.search(html)
@@ -321,7 +324,8 @@ def main():
             "lang": lang,
             "is_ua": is_ua,
             "asset_prefix": asset_prefix,
-            "page_prefix": "../" if is_ua else "",
+            # UA pages live in ua/ and link to their UA siblings.
+            "page_prefix": "",
             "canonical": site["public_url"] + ("ua/" if is_ua else ""),
             "seo": SEO[lang],
             "weekdays": WEEKDAYS[lang],
