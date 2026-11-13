@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Naza Couture portfolio",
+  "type": "object",
+  "required": ["schema_version", "items"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "const": 1 },
+    "items": {
+      "type": "array",
+      "maxItems": 40,
+      "items": { "$ref": "#/$defs/item" }
+    }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^work-[0-9]{1,4}$" },
+    "text": { "type": "string", "minLength": 1, "maxLength": 300, "pattern": "^[^<>{}]*$" },
+    "bilingual": {
+      "type": "object",
+      "required": ["fr", "uk"],
+      "additionalProperties": false,
+      "properties": {
+        "fr": { "$ref": "#/$defs/text" },
+        "uk": { "$ref": "#/$defs/text" }
+      }
+    },
+    "image": {
+      "type": "object",
+      "required": ["file", "width", "height"],
+      "additionalProperties": false,
+      "properties": {
+        "file": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]{0,63}\\.jpg$" },
+        "width": { "type": "integer", "minimum": 1, "maximum": 4000 },
+        "height": { "type": "integer", "minimum": 1, "maximum": 4000 }
+      }
+    },
+    "item": {
+      "type": "object",
+      "required": ["id", "image", "title", "description", "visible"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "image": { "$ref": "#/$defs/image" },
+        "title": { "$ref": "#/$defs/bilingual" },
+        "description": {
+          "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/bilingual" }]
+        },
+        "visible": { "type": "boolean" }
+      }
+    }
+  }
+}
