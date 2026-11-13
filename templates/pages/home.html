@@ -54,9 +54,9 @@
                             {% if hours is none %}
                             {# Not specified: day is not displayed. #}
                             {% elif hours.get('closed') %}
-                            <p class="text-white mb-1">{{ day_label }} {{ 'Fermé' if lang == 'fr' else 'Зачинено' }}</p>
+                            <p class="text-white mb-1">{{ day_label }}{{ day_sep(lang) }} {{ 'Fermé' if lang == 'fr' else 'Зачинено' }}</p>
                             {% else %}
-                            <p class="text-white mb-1">{{ day_label }} {{ hours.open|hour }}-{{ hours.close|hour }}</p>
+                            <p class="text-white mb-1">{{ day_label }}{{ day_sep(lang) }} {{ hours.open|hour }}-{{ hours.close|hour }}</p>
                             {% endif %}
                         {% endfor %}
                         {{ exception_notice | safe }}
