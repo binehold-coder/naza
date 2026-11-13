@@ -2,24 +2,6 @@
   "schema_version": 2,
   "exceptions": [
     {
-      "id": "november-2026-12",
-      "type": "hours",
-      "start_date": "2026-11-12",
-      "end_date": "2026-11-12",
-      "hours": {
-        "open": "09:00",
-        "close": "13:00"
-      },
-      "label": {
-        "fr": "Horaires exceptionnels",
-        "uk": "Особливий графік роботи"
-      },
-      "description": {
-        "fr": null,
-        "uk": null
-      }
-    },
-    {
       "id": "november-2026-19",
       "type": "hours",
       "start_date": "2026-11-19",
@@ -49,6 +31,36 @@
       "label": {
         "fr": "Horaires exceptionnels",
         "uk": "Особливий графік роботи"
+      },
+      "description": {
+        "fr": null,
+        "uk": null
+      }
+    },
+    {
+      "id": "holiday-2026-11-27",
+      "type": "closed",
+      "reason": "holiday",
+      "start_date": "2026-11-27",
+      "end_date": "2026-11-27",
+      "label": {
+        "fr": "Jour férié",
+        "uk": "Святковий день"
+      },
+      "description": {
+        "fr": null,
+        "uk": null
+      }
+    },
+    {
+      "id": "closed-2026-12-01",
+      "type": "closed",
+      "reason": "other",
+      "start_date": "2026-12-01",
+      "end_date": "2026-12-01",
+      "label": {
+        "fr": "Fermeture exceptionnelle",
+        "uk": "Вихідний день"
       },
       "description": {
         "fr": null,
