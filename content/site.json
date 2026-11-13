@@ -1,0 +1,346 @@
+{
+  "schema_version": 1,
+  "brand": {
+    "name": "Naza Couture",
+    "tagline": {
+      "fr": "Atelier & Création",
+      "uk": "Ательє та Творчість"
+    }
+  },
+  "public_url": "https://www.naza-couture.fr/",
+  "timezone": "Europe/Paris",
+  "address": {
+    "street": "200 route de Chambéry",
+    "postal_code": "73370",
+    "city": "Le Bourget-du-Lac",
+    "country": "France",
+    "display": {
+      "fr": "200 route de Chambéry, 73370 Le Bourget-du-Lac",
+      "uk": "200 route de Chambéry, 73370 Le Bourget-du-Lac"
+    }
+  },
+  "contact": {
+    "phone_display": "07 68 00 41 97",
+    "phone_e164": "+33768004197",
+    "email": "contact.naza.group@gmail.com",
+    "social": {
+      "instagram": "https://www.instagram.com/nazafashionbrand",
+      "facebook": "https://www.facebook.com/profile.php?id=61575287786361"
+    }
+  },
+  "opening_hours": {
+    "monday": {
+      "open": "09:00",
+      "close": "18:00"
+    },
+    "tuesday": {
+      "open": "09:00",
+      "close": "16:00"
+    },
+    "wednesday": {
+      "open": "09:00",
+      "close": "12:00"
+    },
+    "thursday": {
+      "open": "09:00",
+      "close": "18:00"
+    },
+    "friday": {
+      "open": "09:00",
+      "close": "16:00"
+    },
+    "saturday": {
+      "open": "09:00",
+      "close": "12:00"
+    },
+    "sunday": {
+      "closed": true
+    }
+  },
+  "navigation": {
+    "home": {
+      "fr": "Accueil",
+      "uk": "Головна"
+    },
+    "services": {
+      "fr": "Services",
+      "uk": "Послуги та Ціни"
+    },
+    "portfolio": {
+      "fr": "Portfolio",
+      "uk": "Портфоліо"
+    },
+    "about": {
+      "fr": "À propos",
+      "uk": "Про нас"
+    },
+    "contact": {
+      "fr": "Contact",
+      "uk": "Контакти"
+    }
+  },
+  "pages": {
+    "home": {
+      "hero_title": {
+        "fr": "Bienvenue chez Naza Couture",
+        "uk": "Професійне ательє у Le Bourget-du-Lac"
+      },
+      "hero_subtitle": {
+        "fr": "Atelier & Création",
+        "uk": "Ательє та Творчість"
+      },
+      "hero_cta": {
+        "fr": "En savoir plus",
+        "uk": "Послуги та ціни"
+      },
+      "services_heading": {
+        "fr": "Nos Services",
+        "uk": "Наші Послуги"
+      },
+      "services_intro": {
+        "fr": "Découvrez ce que nous proposons.",
+        "uk": "Дізнайтеся, що ми пропонуємо."
+      },
+      "service_teasers": [
+        {
+          "id": "sewing-alterations",
+          "title": {
+            "fr": "Couture & Retouches",
+            "uk": "Пошиття та Ремонт"
+          },
+          "description": {
+            "fr": "Réparation, ajustement de vos vêtements et création sur mesure.",
+            "uk": "Ремонт, підгонка одягу та індивідуальне пошиття за вашими мірками."
+          }
+        },
+        {
+          "id": "design",
+          "title": {
+            "fr": "Design",
+            "uk": "Дизайн"
+          },
+          "description": {
+            "fr": "Conception de modèles uniques et innovants pour chaque client.",
+            "uk": "Розробка унікальних та інноваційних моделей для кожного клієнта."
+          }
+        },
+        {
+          "id": "consultation",
+          "title": {
+            "fr": "Consultation",
+            "uk": "Консультація"
+          },
+          "description": {
+            "fr": "Accompagnement personnalisé pour choisir le style qui vous convient.",
+            "uk": "Персональний супровід у виборі стилю, який вам найкраще пасує."
+          }
+        }
+      ]
+    },
+    "about": {
+      "heading": {
+        "fr": "À Propos de Naza Couture",
+        "uk": "Про Naza Couture"
+      },
+      "intro": {
+        "fr": "Plus de 13 ans d'expérience, un savoir-faire unique et un équipement de pointe.",
+        "uk": "Понад 13 років досвіду, унікальна майстерність та передове обладнання."
+      },
+      "timeline": [
+        {
+          "id": "training",
+          "eyebrow": {
+            "fr": "Les Débuts",
+            "uk": "Початок шляху"
+          },
+          "title": {
+            "fr": "Formation & Diplôme en Ukraine",
+            "uk": "Навчання та Диплом в Україні"
+          },
+          "description": {
+            "fr": "Tout commence en Ukraine, avec une formation professionnelle rigoureuse en école de couture. C'est là que se forgent les bases techniques indispensables, la précision du geste et la passion pour les belles matières.",
+            "uk": "Все починається в Україні, з суворого професійного навчання у профільній школі шиття. Саме там закладалися незамінна технічна база, точність кожного руху та пристрасть до красивих матеріалів."
+          },
+          "image": "assets/img/about/1.jpg"
+        },
+        {
+          "id": "experience-france",
+          "eyebrow": {
+            "fr": "Arrivée en France",
+            "uk": "Переїзд до Франції"
+          },
+          "title": {
+            "fr": "Nombreuses Années de Pratique et de Perfectionnement",
+            "uk": "Багато років практики та вдосконалення"
+          },
+          "description": {
+            "fr": "Installation en France presque immédiatement après l’obtention du diplôme. S’ensuivent de nombreuses années de pratique intensive sur le territoire : maîtrise des exigences locales, retouches délicates sur des tissus nobles et perfectionnement continu du savoir-faire.",
+            "uk": "Переїзд до Франції відбувся майже одразу після отримання диплома. Наступні роки — це роки інтенсивної практики: освоєння місцевих вимог, делікатний ремонт шляхетних тканин та постійне відточування майстерності."
+          },
+          "image": "assets/img/about/2.jpg"
+        },
+        {
+          "id": "equipment",
+          "eyebrow": {
+            "fr": "Technologie",
+            "uk": "Технології"
+          },
+          "title": {
+            "fr": "Un Équipement Professionnel de Pointe",
+            "uk": "Професійне обладнання преміум-класу"
+          },
+          "description": {
+            "fr": "Pour garantir un travail irréprochable, l'atelier s'est équipé de machines professionnelles de haute technologie, spécifiques à chaque tâche (surjeteuses, piqueuses industrielles). Rien n'est laissé au hasard.",
+            "uk": "Щоб гарантувати бездоганний результат, ательє оснащене високотехнологічними професійними машинами під кожне конкретне завдання (оверлоки, промислові прямострочні машини). Жодна деталь не залишається без уваги."
+          },
+          "image": "assets/img/about/3.jpg"
+        },
+        {
+          "id": "atelier-opening",
+          "eyebrow": {
+            "fr": "Janvier 2026",
+            "uk": "Січень 2026"
+          },
+          "title": {
+            "fr": "L'Ouverture au Bourget-du-Lac",
+            "uk": "Відкриття в Le Bourget-du-Lac"
+          },
+          "description": {
+            "fr": "L'aboutissement d'un long parcours est l'ouverture de son propre atelier à Le Bourget-du-Lac. Depuis son lancement en janvier 2026, Naza Couture met ses nombreuses années d'expérience au service des clients locaux, en réalisant des retouches invisibles et en créant des pièces uniques.",
+            "uk": "Результат тривалого шляху — відкриття власного ательє в Le Bourget-du-Lac. Від запуску в січні 2026 року Naza Couture спрямовує свій багаторічний досвід на користь місцевих клієнтів, виконуючи непомітний ремонт та створюючи унікальні речі."
+          },
+          "image": "assets/img/about/4.jpg"
+        }
+      ],
+      "closing": {
+        "fr": "Votre Histoire Commence !",
+        "uk": "Ваша Історія Починається!"
+      }
+    },
+    "contact": {
+      "heading": {
+        "fr": "Contactez-nous",
+        "uk": "Контакти"
+      },
+      "intro": {
+        "fr": "Une question, un devis ou un rendez-vous ? Contactez l'atelier dès aujourd'hui.",
+        "uk": "Маєте запитання, потрібен розрахунок вартості або хочете записатися на візит? Зв'яжіться з ательє вже сьогодні."
+      }
+    },
+    "process": {
+      "heading": {
+        "fr": "Notre Processus",
+        "uk": null
+      },
+      "intro": {
+        "fr": "Comment se déroule votre commande à l'atelier.",
+        "uk": null
+      },
+      "steps": [
+        {
+          "id": "visit-contact",
+          "title": {
+            "fr": "Visite ou Contact",
+            "uk": null
+          },
+          "description": {
+            "fr": "Venez à l'atelier avec votre vêtement ou contactez-nous pour discuter de votre projet de création.",
+            "uk": null
+          }
+        },
+        {
+          "id": "measure-quote",
+          "title": {
+            "fr": "Mesures & Devis",
+            "uk": null
+          },
+          "description": {
+            "fr": "Nous prenons les mesures nécessaires et fixons ensemble le prix exact de la prestation.",
+            "uk": null
+          }
+        },
+        {
+          "id": "production",
+          "title": {
+            "fr": "Réalisation",
+            "uk": null
+          },
+          "description": {
+            "fr": "Nous effectuons les retouches ou le sur-mesure avec une précision maximale et une attention particulière aux détails.",
+            "uk": null
+          }
+        },
+        {
+          "id": "fitting-delivery",
+          "title": {
+            "fr": "Essayage & Remise",
+            "uk": null
+          },
+          "description": {
+            "fr": "Vous essayez votre vêtement retouché ou créé sur mesure, puis vous repartez avec.",
+            "uk": null
+          }
+        }
+      ]
+    },
+    "footer": {
+      "copyright": {
+        "fr": "Copyright © Naza Couture 2026",
+        "uk": "Copyright © Naza Couture 2026"
+      },
+      "legal_link": {
+        "fr": "Mentions Légales & Confidentialité",
+        "uk": "Юридична інформація та Конфіденційність"
+      }
+    },
+    "legal": {
+      "language_available": [
+        "fr"
+      ],
+      "heading": {
+        "fr": "Mentions légales"
+      },
+      "intro": {
+        "fr": "Informations obligatoires concernant l'éditeur du site."
+      },
+      "publisher": {
+        "fr": "Naza Couture (Entrepreneur Individuel)"
+      },
+      "publication_director": "Nataliia DUBOVA",
+      "siret": "993 239 292 00028",
+      "hosting": {
+        "fr": "IONOS SE, 7 place de la Gare, BP 70109, 57200 Sarreguemines Cédex"
+      },
+      "privacy_statement": {
+        "fr": "Ce site est purement informationnel. Il n'utilise pas de cookies et ne collecte pas de données via des formulaires."
+      }
+    },
+    "announcements": []
+  },
+  "content_notes": [
+    {
+      "id": "HOURS-001",
+      "field": "opening_hours.sunday",
+      "status": "needs_confirmation",
+      "note": "Sunday hours were not present in source; null means unknown, not confirmed closed."
+    },
+    {
+      "id": "LANG-003",
+      "field": "pages.process",
+      "status": "translation_missing",
+      "note": "French process content exists; Ukrainian text intentionally left null until approved translation."
+    },
+    {
+      "id": "LANG-002",
+      "field": "pages.legal",
+      "status": "translation_missing",
+      "note": "Legal page currently exists only in French."
+    },
+    {
+      "id": "LEGAL-001",
+      "field": "pages.legal.privacy_statement",
+      "status": "review_required",
+      "note": "Existing cookie/privacy statement is transcribed as-is; verify third-party embeds and GDPR before changing."
+    }
+  ]
+}
