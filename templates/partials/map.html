@@ -1,0 +1,13 @@
+{# Click-to-load Google map: nothing is requested from Google until the visitor clicks (no cookies on page load). #}
+<div class="ratio ratio-16x9 h-100 map-consent" style="min-height: 350px;" data-map-embed data-map-src="{{ map.embed_url }}" data-map-title="{{ map.title }}">
+    <div class="map-consent-inner">
+        <i class="fas fa-map-marker-alt fa-3x mb-3" aria-hidden="true"></i>
+        <p class="mb-1 fw-bold">{{ site.brand.name }}</p>
+        <p class="mb-3">{{ site.address.display[lang] }}</p>
+        <div class="d-flex flex-wrap justify-content-center gap-2">
+            <a class="btn btn-primary" href="{{ map.link }}" target="_blank" rel="noopener noreferrer">{{ map.open_label }}</a>
+            <button type="button" class="btn btn-outline-light" data-map-load>{{ map.load_label }}</button>
+        </div>
+        <p class="small mt-3 mb-0 map-consent-note">{{ map.note }}</p>
+    </div>
+</div>

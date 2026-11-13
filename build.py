@@ -21,6 +21,7 @@ OUTPUT = ROOT / "preview-site"
 EXCLUDED_DIRS = {
     ".git", ".github", ".vercel", ".venv", "venv", "node_modules",
     "__pycache__", "preview-site", "app", "content", "templates",
+    "img",  # archive of original photos/video, not used by any page (kept in the repo, not deployed)
 }
 EXCLUDED_FILES = {
     "build.py", "requirements.txt", "README.txt", "README.md",
@@ -358,6 +359,111 @@ def update_contact_blocks(env: Environment, site: dict):
                          env.get_template("partials/legal_contact.html").render(site=site))
 
 
+# ---------- map ----------
+
+# Google map of the atelier. The iframe is only created when the visitor clicks (js/scripts.js),
+# so no request goes to Google (and no Google cookie is set) on page load.
+MAP_EMBED_URL = ("https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d697.2990051237166!2d5.859649969665708"
+                 "!3d45.646885135729875!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x478b09007a769fc9"
+                 "%3A0x4c4daf373a0dc637!2sNAZA%20COUTURE!5e0!3m2!1sfr!2sfr!4v1782716974586!5m2!1sfr!2sfr")
+MAP_LINK = "https://maps.google.com/?cid=5498243371821286967"  # the NAZA COUTURE place (cid from the embed)
+MAP_TEXTS = {
+    "fr": {"title": "Carte : Naza Couture au Bourget-du-Lac", "open_label": "Ouvrir dans Google Maps",
+           "load_label": "Afficher la carte ici",
+           "note": "La carte est fournie par Google. En l'affichant, vous acceptez que Google puisse déposer des cookies."},
+    "uk": {"title": "Карта: Naza Couture у Le Bourget-du-Lac", "open_label": "Відкрити в Google Maps",
+           "load_label": "Показати карту тут",
+           "note": "Карту надає Google. Якщо ви її відкриєте, Google може зберегти cookies."},
+}
+
+
+def map_context(lang: str) -> dict:
+    return {"embed_url": f"{MAP_EMBED_URL}&hl={'uk' if lang == 'uk' else 'fr'}", "link": MAP_LINK, **MAP_TEXTS[lang]}
+
+
+def update_map_blocks(env: Environment, site: dict):
+    for rel, lang in (("contact", "fr"), ("ua/contact", "uk")):
+        replace_marked_block(OUTPUT / f"{rel}.html", "map", env.get_template("partials/map.html").render(
+            site=site, lang=lang, map=map_context(lang)))
+
+
+# ---------- SEO: canonical/OG URLs, hreflang, sitemap, robots ----------
+
+# FR page -> UA page (None = no UA version yet). Order = order in the sitemap.
+PAGE_PAIRS = {
+    "index.html": "ua/index.html",
+    "about.html": "ua/about.html",
+    "services.html": "ua/services.html",
+    "portfolio.html": "ua/portfolio.html",
+    "contact.html": "ua/contact.html",
+    "legal.html": None,
+}
+
+
+def page_url(site: dict, rel: str) -> str:
+    """Public URL of a page; index pages are served as their folder."""
+    if rel.endswith("index.html"):
+        rel = rel[: -len("index.html")]
+    return site["public_url"] + rel
+
+
+def set_meta(html: str, rel: str, pattern: str, replacement: str, insert_after: str | None = None) -> str:
+    html, count = re.subn(pattern, replacement, html, count=1)
+    if count:
+        return html
+    if insert_after is None:
+        raise SystemExit(f"SEO: missing {pattern!r} in {rel}")
+    html, count = re.subn(insert_after, lambda m: m.group(0) + "\n        " + replacement, html, count=1)
+    if not count:
+        raise SystemExit(f"SEO: could not add {replacement!r} to {rel}")
+    return html
+
+
+def finalize_seo(site: dict):
+    """Canonical/OG URLs from site.public_url, hreflang pairs, sitemap.xml, robots.txt."""
+    base = site["public_url"]
+    image = base + "assets/img/logo.png"
+    alternates = {}
+    for fr, ua in PAGE_PAIRS.items():
+        if ua:
+            links = [("fr", page_url(site, fr)), ("uk", page_url(site, ua)), ("x-default", page_url(site, fr))]
+            alternates[fr] = alternates[ua] = links
+
+    for rel in [*PAGE_PAIRS, *(ua for ua in PAGE_PAIRS.values() if ua)]:
+        path = OUTPUT / rel
+        if not path.is_file():
+            raise SystemExit(f"SEO: page is missing: {rel}")
+        html = path.read_text(encoding="utf-8")
+        url = page_url(site, rel)
+        html = re.sub(r'[ \t]*<link rel="alternate" hreflang="[^"]*" href="[^"]*" />\n', "", html)
+        html = set_meta(html, rel, r'<link rel="canonical" href="[^"]*" />', f'<link rel="canonical" href="{url}" />')
+        html = set_meta(html, rel, r'<meta property="og:url" content="[^"]*" />', f'<meta property="og:url" content="{url}" />')
+        html = set_meta(html, rel, r'<meta property="og:image" content="[^"]*" />',
+                        f'<meta property="og:image" content="{image}" />', r'<meta property="og:description" content="[^"]*" />')
+        html = set_meta(html, rel, r'<meta name="twitter:image" content="[^"]*" />',
+                        f'<meta name="twitter:image" content="{image}" />', r'<meta name="twitter:description" content="[^"]*" />')
+        if rel in alternates:
+            links = "".join(f'\n        <link rel="alternate" hreflang="{code}" href="{href}" />'
+                            for code, href in alternates[rel])
+            html = re.sub(r'(<link rel="canonical" href="[^"]*" />)', lambda m: m.group(1) + links, html, count=1)
+        path.write_text(html, encoding="utf-8")
+
+    for path in OUTPUT.rglob("*.html"):
+        if "github.io" in path.read_text(encoding="utf-8"):
+            raise SystemExit(f"SEO: old GitHub Pages URL left in {path.relative_to(OUTPUT)}")
+
+    entries = []
+    for fr, ua in PAGE_PAIRS.items():
+        for rel in (fr, ua):
+            if rel:
+                entries.append(f"  <url><loc>{page_url(site, rel)}</loc></url>")
+    (OUTPUT / "sitemap.xml").write_text(
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' + "\n".join(entries) + "\n</urlset>\n",
+        encoding="utf-8")
+    (OUTPUT / "robots.txt").write_text(f"User-agent: *\nAllow: /\n\nSitemap: {base}sitemap.xml\n", encoding="utf-8")
+
+
 # ---------- portfolio ----------
 
 PORTFOLIO_SOURCE = CONTENT / "portfolio"     # images uploaded by the bot live next to the JSON
@@ -514,6 +620,7 @@ def main():
             "weekdays": WEEKDAYS[lang],
             "exceptions": exceptions["exceptions"],
             "exception_notice": exception_notice_markup(lang),
+            "map": map_context(lang),
         }
         html = env.get_template("pages/home.html").render(**context)
         (page_dir / "index.html").write_text(html, encoding="utf-8")
@@ -533,8 +640,14 @@ def main():
     # Phone, email and social links come from content/site.json (contact).
     update_contact_blocks(env, site)
 
+    # Click-to-load map on the contact pages (home pages include the same partial).
+    update_map_blocks(env, site)
+
     # Banner + notice + announcement data on every page; the script shows items by date.
     inject_exceptions_everywhere(exceptions["exceptions"], announcement)
+
+    # Canonical/OG URLs, hreflang, sitemap.xml and robots.txt for the public domain.
+    finalize_seo(site)
 
     print("Build successful: complete FR/UA site copied to ./preview-site.")
     print("Generated FR/UA homepages, synchronized contact schedules, added exception notices and banners.")

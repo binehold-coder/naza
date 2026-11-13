@@ -1,0 +1,15 @@
+/* Self-hosted fonts (no requests to Google). Variable fonts, subset: Latin, Latin Extended, Cyrillic. Licenses: assets/fonts/*.txt */
+@font-face {
+  font-family: "Montserrat";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("../assets/fonts/montserrat.woff") format("woff");
+}
+@font-face {
+  font-family: "Roboto Slab";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("../assets/fonts/roboto-slab.woff") format("woff");
+}

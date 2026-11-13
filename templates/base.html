@@ -18,16 +18,15 @@
     <meta name="twitter:image" content="{{ site.public_url }}assets/img/logo.png" />
     <title>{{ seo.title }}</title>
     <link rel="icon" type="image/x-icon" href="{{ asset_prefix }}assets/favicon.ico" />
-    <script src="https://use.fontawesome.com/releases/v6.3.0/js/all.js" crossorigin="anonymous"></script>
-    <link href="https://fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet" type="text/css" />
-    <link href="https://fonts.googleapis.com/css?family=Roboto+Slab:400,100,300,700" rel="stylesheet" type="text/css" />
+    <script src="{{ asset_prefix }}assets/vendor/fontawesome/all.min.js"></script>
+    <link href="{{ asset_prefix }}css/fonts.css" rel="stylesheet" />
     <link href="{{ asset_prefix }}css/styles.css" rel="stylesheet" />
 </head>
 <body id="page-top">
     {% include 'partials/navbar.html' %}
     {% block content %}{% endblock %}
     {% include 'partials/footer.html' %}
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ asset_prefix }}assets/vendor/bootstrap/bootstrap.bundle.min.js"></script>
     <script src="{{ asset_prefix }}js/scripts.js"></script>
 </body>
 </html>
