@@ -8,6 +8,7 @@ from html import escape
 from pathlib import Path
 
 from jsonschema import Draft202012Validator, FormatChecker
+from markupsafe import Markup
 from jinja2 import Environment, FileSystemLoader, StrictUndefined, select_autoescape
 
 ROOT = Path(__file__).resolve().parent
@@ -98,6 +99,11 @@ def format_hour(value: str) -> str:
     return f"{int(value[:2])}h{value[3:]}"
 
 
+def day_sep(lang: str) -> str:
+    """Separator after a weekday name: French typography puts a no-break space before the colon."""
+    return "&nbsp;:" if lang == "fr" else ":"
+
+
 def schedule_rows(site: dict, lang: str, paragraph_class: str) -> str:
     rows = []
     for day_key, label in WEEKDAYS[lang]:
@@ -106,9 +112,9 @@ def schedule_rows(site: dict, lang: str, paragraph_class: str) -> str:
             # Not specified: do not display the day at all.
             continue
         if hours.get("closed"):
-            text = f'{escape(label)} {"Fermé" if lang == "fr" else "Зачинено"}'
+            text = f'{escape(label)}{day_sep(lang)} {"Fermé" if lang == "fr" else "Зачинено"}'
         else:
-            text = f'{escape(label)} {format_hour(hours["open"])}-{format_hour(hours["close"])}'
+            text = f'{escape(label)}{day_sep(lang)} {format_hour(hours["open"])}-{format_hour(hours["close"])}'
         rows.append(
             f'<p class="{escape(paragraph_class, quote=True)}">{text}</p>'
         )
@@ -308,6 +314,7 @@ def main():
         lstrip_blocks=True,
     )
     env.filters["hour"] = format_hour
+    env.globals["day_sep"] = lambda lang: Markup(day_sep(lang))
 
     # Rebuild the deployable folder from the full static site on every run.
     if OUTPUT.exists():
