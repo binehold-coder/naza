@@ -1,0 +1,3 @@
+{% for link in social_links %}
+<a class="btn btn-dark btn-social mx-2" href="{{ link.url }}" target="_blank" rel="noopener noreferrer" aria-label="{{ link.label }}"><i class="fab {{ link.icon }}"></i></a>
+{% endfor %}

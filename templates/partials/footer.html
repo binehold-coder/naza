@@ -3,8 +3,7 @@
         <div class="row align-items-center">
             <div class="col-lg-4 text-lg-start">{{ site.pages.footer.copyright[lang] }}</div>
             <div class="col-lg-4 my-3 my-lg-0">
-                <a class="btn btn-dark btn-social mx-2" href="{{ site.contact.social.instagram }}" target="_blank" rel="noopener noreferrer" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
-                <a class="btn btn-dark btn-social mx-2" href="{{ site.contact.social.facebook }}" target="_blank" rel="noopener noreferrer" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+                {% filter indent(16, first=true) %}{% include "partials/social_links.html" %}{% endfilter %}
             </div>
             <div class="col-lg-4 text-lg-end">
                 <a class="link-dark text-decoration-none" href="/legal.html">{{ site.pages.footer.legal_link[lang] }}</a>

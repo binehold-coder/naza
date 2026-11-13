@@ -63,8 +63,7 @@
                     </div>
                     <div class="mb-4">
                         <h4 class="text-uppercase text-white mb-2">{{ 'Suivez-nous' if lang == 'fr' else 'Підписуйтесь на нас' }}</h4>
-                        <a class="btn btn-dark btn-social mx-2" href="{{ site.contact.social.facebook }}" target="_blank" rel="noopener noreferrer" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
-                        <a class="btn btn-dark btn-social mx-2" href="{{ site.contact.social.instagram }}" target="_blank" rel="noopener noreferrer" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                        {% filter indent(24, first=true) %}{% include "partials/social_links.html" %}{% endfilter %}
                     </div>
                 </div>
                 <div class="col-lg-7">
