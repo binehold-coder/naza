@@ -11372,3 +11372,22 @@ section#contact form#contactForm :-ms-input-placeholder {
     justify-content: flex-end;
   }
 }
+/* Schedule exceptions banner (js/exceptions.js). The fixed navbar is kept below it. */
+.exceptions-banner {
+  position: relative;
+  z-index: 1031;
+  padding: 0.5rem 1rem;
+  background-color: #ffc800;
+  color: #212529;
+  text-align: center;
+  font-family: "Montserrat", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-size: 0.9rem;
+  font-weight: 700;
+  line-height: 1.4;
+}
+.exceptions-banner p {
+  margin: 0;
+}
+.exceptions-banner[hidden] {
+  display: none;
+}

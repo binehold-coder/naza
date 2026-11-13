@@ -133,7 +133,7 @@ def update_contact_schedule(path: Path, site: dict, lang: str, exceptions: list)
         rf'(?P<rows>(?:<p\b[^>]*>.*?</p>\s*)+)'
         # A previously generated exceptions notice may already follow the rows
         # in the source HTML; consume it so it is replaced, not duplicated.
-        rf'(?P<notice><div\b[^>]*\bid="schedule-exceptions-\w+"[^>]*>\s*</div>\s*<script>.*?</script>)?',
+        rf'(?P<notice><div\b[^>]*\bid="schedule-exceptions-\w+"[^>]*>\s*</div>(?:\s*<script>.*?</script>)?)?',
         re.IGNORECASE | re.DOTALL,
     )
     match = pattern.search(html)
@@ -149,7 +149,7 @@ def update_contact_schedule(path: Path, site: dict, lang: str, exceptions: list)
     paragraph_class = class_match.group(2) if class_match else ""
     new_rows = schedule_rows(site, lang, paragraph_class)
     replacement = (match.group("heading") + match.group("gap") + new_rows
-                   + exception_notice_markup(exceptions, lang))
+                   + "\n" + exception_notice_markup(lang))
     updated = html[:match.start()] + replacement + html[match.end():]
     path.write_text(updated, encoding="utf-8")
 
@@ -198,104 +198,35 @@ def validate_exceptions_semantics(data: dict):
             )
 
 
-def exception_notice_markup(exceptions: list, lang: str) -> str:
-    """Render compact grouped notices for all current and upcoming exceptions."""
-    payload = json.dumps(exceptions, ensure_ascii=False).replace("<", "\\u003c")
-    container_id = f"schedule-exceptions-{lang}"
-    script = r'''<div id="__CONTAINER__" class="mt-3 text-warning" aria-live="polite" hidden></div>
-<script>
-(() => {
-    const container = document.getElementById("__CONTAINER__");
-    if (!container) return;
-    const exceptions = __PAYLOAD__;
-    const language = "__LANG__";
-    const render = () => {
-        container.replaceChildren();
-        container.hidden = true;
-        const parts = Object.fromEntries(new Intl.DateTimeFormat("en-CA", {
-            timeZone: "Europe/Paris", year: "numeric", month: "2-digit", day: "2-digit"
-        }).formatToParts(new Date()).map(part => [part.type, part.value]));
-        const today = `${parts.year}-${parts.month}-${parts.day}`;
-        const visible = exceptions.filter(item => item.end_date >= today)
-            .sort((a, b) => a.start_date.localeCompare(b.start_date));
-        if (!visible.length) return;
+def exception_notice_markup(lang: str) -> str:
+    """Container for the exceptions notice under the opening hours; filled by js/exceptions.js."""
+    return (f'<div id="schedule-exceptions-{lang}" class="mt-3 text-warning" '
+            'data-exceptions-notice aria-live="polite" hidden></div>')
 
-        const heading = document.createElement("h5");
-        heading.className = "text-warning mb-2";
-        heading.textContent = language === "fr" ? "Informations exceptionnelles" : "Тимчасові зміни графіка";
-        container.appendChild(heading);
 
-        const groups = new Map();
-        for (const item of visible) {
-            const key = JSON.stringify([item.type, item.hours || null, item.label, item.description || null]);
-            if (!groups.has(key)) groups.set(key, []);
-            groups.get(key).push(item);
-        }
+def inject_exceptions_runtime(path: Path, lang: str, asset_prefix: str, exceptions: list):
+    """Add the exceptions banner and the exceptions data/script to one page."""
+    html = path.read_text(encoding="utf-8")
+    payload = json.dumps({"lang": lang, "items": exceptions}, ensure_ascii=False).replace("<", "\\u003c")
+    banner = '<div id="exceptions-banner" class="exceptions-banner" role="status" hidden></div>'
+    runtime = (f'<script>window.NAZA_EXCEPTIONS = {payload};</script>\n'
+               f'<script src="{asset_prefix}js/exceptions.js"></script>\n')
+    html, body_count = re.subn(r"(<body\b[^>]*>)", lambda m: m.group(1) + "\n" + banner, html, count=1)
+    html, end_count = re.subn(r"(</body>)", lambda m: runtime + m.group(1), html, count=1)
+    if body_count != 1 or end_count != 1:
+        raise SystemExit(f"Could not add the exceptions banner to {path.relative_to(OUTPUT)}.")
+    path.write_text(html, encoding="utf-8")
 
-        for (const items of groups.values()) {
-            const first = items[0];
-            const line = document.createElement("p");
-            line.className = "text-warning mb-1";
-            const dates = items.map(item => {
-                const [year, month, day] = item.start_date.split("-").map(Number);
-                return { year, month, day, singleDay: item.end_date === item.start_date };
-            });
-            const sameMonth = dates.every(d =>
-                d.year === dates[0].year && d.month === dates[0].month && d.singleDay
-            );
-            let dateText;
-            if (sameMonth && dates.length > 1) {
-                const monthName = language === "fr"
-                    ? new Intl.DateTimeFormat("fr-FR", { month: "long", timeZone: "UTC" })
-                        .format(new Date(Date.UTC(dates[0].year, dates[0].month - 1, 15)))
-                    : ["січня", "лютого", "березня", "квітня", "травня", "червня", "липня", "серпня", "вересня", "жовтня", "листопада", "грудня"][dates[0].month - 1];
-                const dayList = dates.map(d => d.day);
-                const joined = language === "fr"
-                    ? dayList.slice(0, -1).join(", ") + " et " + dayList[dayList.length - 1]
-                    : dayList.slice(0, -1).join(", ") + " та " + dayList[dayList.length - 1];
-                const weekdayNumbers = dates.map(d => new Date(Date.UTC(d.year, d.month - 1, d.day)).getUTCDay());
-                const sameWeekday = weekdayNumbers.every(day => day === weekdayNumbers[0]);
-                if (sameWeekday) {
-                    const weekday = weekdayNumbers[0];
-                    const frWeekday = new Intl.DateTimeFormat("fr-FR", { weekday: "long", timeZone: "UTC" })
-                        .format(new Date(Date.UTC(dates[0].year, dates[0].month - 1, dates[0].day)));
-                    const ukWeekdays = ["неділі", "понеділки", "вівторки", "середи", "четверги", "п’ятниці", "суботи"];
-                    dateText = language === "fr"
-                        ? `Les ${frWeekday}s ${joined} ${monthName} ${dates[0].year}`
-                        : `${ukWeekdays[weekday][0].toLocaleUpperCase("uk-UA")}${ukWeekdays[weekday].slice(1)} ${joined} ${monthName} ${dates[0].year} року`;
-                } else {
-                    dateText = language === "fr"
-                        ? `Les ${joined} ${monthName} ${dates[0].year}`
-                        : `${joined} ${monthName} ${dates[0].year} року`;
-                }
-            } else {
-                const locale = language === "fr" ? "fr-FR" : "uk-UA";
-                const fmt = value => new Intl.DateTimeFormat(locale, { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" })
-                    .format(new Date(`${value}T12:00:00Z`));
-                dateText = items.map(item => item.start_date === item.end_date
-                    ? fmt(item.start_date)
-                    : (language === "fr" ? "Du " : "З ") + fmt(item.start_date) + (language === "fr" ? " au " : " до ") + fmt(item.end_date))
-                    .join(language === "fr" ? "; " : "; ");
-            }
-            if (first.type === "hours") {
-                const formatHour = value => `${value.slice(0, 2)}h${value.slice(3)}`;
-                line.textContent = language === "fr"
-                    ? `${dateText} : ouverture de ${formatHour(first.hours.open)} à ${formatHour(first.hours.close)}`
-                    : `${dateText}: працюємо з ${formatHour(first.hours.open)} до ${formatHour(first.hours.close)}`;
-            } else {
-                line.textContent = language === "fr" ? `${dateText} — atelier fermé` : `${dateText} — ательє зачинене`;
-            }
-            container.appendChild(line);
-        }
-        container.hidden = false;
-    };
-    render();
-    window.setInterval(render, 60 * 1000);
-})();
-</script>'''
-    return (script.replace("__CONTAINER__", container_id)
-                  .replace("__PAYLOAD__", payload)
-                  .replace("__LANG__", lang))
+
+def inject_exceptions_everywhere(exceptions: list):
+    """Every page with the main navbar gets the banner (FR in the root, UA in ua/)."""
+    for path in sorted(OUTPUT.rglob("*.html")):
+        relative = path.relative_to(OUTPUT)
+        html = path.read_text(encoding="utf-8")
+        if 'id="mainNav"' not in html:
+            continue
+        is_ua = relative.parts[0] == "ua"
+        inject_exceptions_runtime(path, "uk" if is_ua else "fr", "../" if is_ua else "", exceptions)
 
 
 def main():
@@ -337,7 +268,7 @@ def main():
             "seo": SEO[lang],
             "weekdays": WEEKDAYS[lang],
             "exceptions": exceptions["exceptions"],
-            "exception_notice": exception_notice_markup(exceptions["exceptions"], lang),
+            "exception_notice": exception_notice_markup(lang),
         }
         html = env.get_template("pages/home.html").render(**context)
         (page_dir / "index.html").write_text(html, encoding="utf-8")
@@ -347,8 +278,11 @@ def main():
     update_contact_schedule(OUTPUT / "contact.html", site, "fr", exceptions["exceptions"])
     update_contact_schedule(OUTPUT / "ua" / "contact.html", site, "uk", exceptions["exceptions"])
 
+    # Banner + notice data on every page; the script hides past items by date.
+    inject_exceptions_everywhere(exceptions["exceptions"])
+
     print("Build successful: complete FR/UA site copied to ./preview-site.")
-    print("Generated FR/UA homepages, synchronized contact schedules, and added upcoming exception notices.")
+    print("Generated FR/UA homepages, synchronized contact schedules, added exception notices and banners.")
     print("Original source HTML files were not modified.")
 
 
