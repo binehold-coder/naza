@@ -78,20 +78,34 @@
       ],
       "properties": {
         "phone_display": {
-          "type": "string"
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 30
         },
         "phone_e164": {
-          "type": "string"
+          "type": "string",
+          "pattern": "^\\+[1-9][0-9]{7,14}$"
         },
         "email": {
           "type": "string",
-          "format": "email"
+          "format": "email",
+          "maxLength": 254
         },
         "social": {
           "type": "object",
+          "minProperties": 1,
+          "propertyNames": {
+            "enum": [
+              "instagram",
+              "facebook",
+              "tiktok"
+            ]
+          },
           "additionalProperties": {
             "type": "string",
-            "format": "uri"
+            "format": "uri",
+            "pattern": "^https://",
+            "maxLength": 300
           }
         }
       },

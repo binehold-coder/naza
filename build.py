@@ -6,6 +6,7 @@ import shutil
 from datetime import date
 from html import escape
 from pathlib import Path
+from urllib.parse import urlsplit
 
 from jsonschema import Draft202012Validator, FormatChecker
 from markupsafe import Markup
@@ -271,7 +272,7 @@ def visible_categories(data: dict) -> list:
 
 
 def replace_marked_block(path: Path, name: str, rendered: str):
-    """Replace the content between <!-- name:start ... --> and <!-- name:end --> with ``rendered``."""
+    """Replace the content between every <!-- name:start ... --> and <!-- name:end --> pair with ``rendered``."""
     if not path.is_file():
         raise SystemExit(f"Required page is missing: {path.relative_to(OUTPUT)}")
     html = path.read_text(encoding="utf-8")
@@ -279,13 +280,20 @@ def replace_marked_block(path: Path, name: str, rendered: str):
         rf"(?P<start><!-- {re.escape(name)}:start[^>]*-->)(?P<body>.*?)(?P<indent>[ \t]*)(?P<end><!-- {re.escape(name)}:end -->)",
         re.DOTALL,
     )
-    match = pattern.search(html)
-    if not match:
+    count = 0
+
+    def replace(match):
+        nonlocal count
+        count += 1
+        indent = match.group("indent")
+        body = "\n".join((indent + line) if line.strip() else "" for line in rendered.strip("\n").split("\n"))
+        return match.group("start") + "\n" + body + "\n" + indent + match.group("end")
+
+    # Every block with this name on the page is replaced (e.g. social links in the body and the footer).
+    html = pattern.sub(replace, html)
+    if not count:
         raise SystemExit(f"Could not locate the {name} block in {path.relative_to(OUTPUT)}; build stopped.")
-    indent = match.group("indent")
-    body = "\n".join((indent + line) if line.strip() else "" for line in rendered.strip("\n").split("\n"))
-    replacement = match.group("start") + "\n" + body + "\n" + indent + match.group("end")
-    path.write_text(html[:match.start()] + replacement + html[match.end():], encoding="utf-8")
+    path.write_text(html, encoding="utf-8")
 
 
 def update_services_page(path: Path, env: Environment, services: dict, lang: str):
@@ -294,6 +302,60 @@ def update_services_page(path: Path, env: Environment, services: dict, lang: str
         lang=lang, categories=visible_categories(services), urgency=services["urgency"],
     )
     replace_marked_block(path, "services", rendered)
+
+
+# ---------- contacts ----------
+
+# Order on the site; key -> (label, Font Awesome icon, allowed hosts). Mirrored in the bot.
+SOCIAL_NETWORKS = {
+    "instagram": ("Instagram", "fa-instagram", ("instagram.com", "www.instagram.com")),
+    "facebook": ("Facebook", "fa-facebook-f", ("facebook.com", "www.facebook.com", "m.facebook.com")),
+    "tiktok": ("TikTok", "fa-tiktok", ("tiktok.com", "www.tiktok.com")),
+}
+# Pages whose contact data come from site.json (generated home pages use the templates directly).
+SOCIAL_PAGES = ("about", "contact", "legal", "portfolio", "services",
+                "ua/about", "ua/contact", "ua/portfolio", "ua/services")
+
+
+def validate_contact_semantics(site: dict):
+    contact = site["contact"]
+    phone = contact["phone_e164"]
+    if not re.fullmatch(r"\+[1-9]\d{7,14}", phone):
+        raise SystemExit(f"contact.phone_e164 is not an international number: {phone}")
+    display_digits = re.sub(r"\D", "", contact["phone_display"])
+    if display_digits.startswith("0"):  # French national format: 07 68 00 41 97 = +33 7 68 00 41 97
+        display_digits = "33" + display_digits[1:]
+    if display_digits != phone[1:]:
+        raise SystemExit("contact.phone_display does not match contact.phone_e164")
+    social = contact["social"]
+    if not social:
+        raise SystemExit("contact.social: at least one social network is required")
+    for key, url in social.items():
+        if key not in SOCIAL_NETWORKS:
+            raise SystemExit(f"contact.social.{key}: unknown network")
+        host = urlsplit(url).hostname or ""
+        if urlsplit(url).scheme != "https" or host not in SOCIAL_NETWORKS[key][2]:
+            raise SystemExit(f"contact.social.{key}: URL must be https://{SOCIAL_NETWORKS[key][2][0]}/...")
+
+
+def social_links(site: dict) -> list:
+    social = site["contact"]["social"]
+    return [
+        {"url": social[key], "label": label, "icon": icon}
+        for key, (label, icon, _) in SOCIAL_NETWORKS.items() if social.get(key)
+    ]
+
+
+def update_contact_blocks(env: Environment, site: dict):
+    """Social links on every copied page, phone/email on the contact and legal pages."""
+    for rel in SOCIAL_PAGES:
+        replace_marked_block(OUTPUT / f"{rel}.html", "social-links",
+                             env.get_template("partials/social_links.html").render())
+    for rel, lang in (("contact", "fr"), ("ua/contact", "uk")):
+        replace_marked_block(OUTPUT / f"{rel}.html", "contact-details",
+                             env.get_template("partials/contact_details.html").render(site=site, lang=lang))
+    replace_marked_block(OUTPUT / "legal.html", "legal-contact",
+                         env.get_template("partials/legal_contact.html").render(site=site))
 
 
 # ---------- portfolio ----------
@@ -370,6 +432,7 @@ def inject_exceptions_everywhere(exceptions: list):
 def main():
     site = load_json("site.json")
     validate(site, "site.schema.json")
+    validate_contact_semantics(site)
 
     exceptions = load_json("exceptions.json")
     validate(exceptions, "exceptions.schema.json")
@@ -393,6 +456,7 @@ def main():
     env.filters["hour"] = format_hour
     env.filters["price"] = format_price
     env.globals["day_sep"] = lambda lang: Markup(day_sep(lang))
+    env.globals["social_links"] = social_links(site)
 
     # Rebuild the deployable folder from the full static site on every run.
     if OUTPUT.exists():
@@ -431,6 +495,9 @@ def main():
 
     # Portfolio grid and modals come from content/portfolio.json (+ images in content/portfolio/).
     build_portfolio(env, portfolio)
+
+    # Phone, email and social links come from content/site.json (contact).
+    update_contact_blocks(env, site)
 
     # Banner + notice data on every page; the script hides past items by date.
     inject_exceptions_everywhere(exceptions["exceptions"])
