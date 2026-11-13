@@ -36,21 +36,6 @@
         "fr": null,
         "uk": null
       }
-    },
-    {
-      "id": "closed-2026-12-01",
-      "type": "closed",
-      "reason": "other",
-      "start_date": "2026-12-01",
-      "end_date": "2026-12-01",
-      "label": {
-        "fr": "Fermeture exceptionnelle",
-        "uk": "Вихідний день"
-      },
-      "description": {
-        "fr": null,
-        "uk": null
-      }
     }
   ]
 }
