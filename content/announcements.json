@@ -1,4 +1,15 @@
 {
   "schema_version": 1,
-  "announcement": null
+  "announcement": {
+    "start_date": "2026-11-14",
+    "end_date": null,
+    "text": {
+      "fr": "RAPPEL ! Il faut tester le bot de manière approfondie !!!",
+      "uk": "НАПОМИНАЮ! Бота надо тщательно протестировать!!!"
+    },
+    "details": {
+      "fr": null,
+      "uk": null
+    }
+  }
 }
