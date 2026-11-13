@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Naza Couture announcement (one at a time)",
+  "type": "object",
+  "required": ["schema_version", "announcement"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "announcement": {
+      "oneOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "required": ["start_date", "end_date", "text", "details"],
+          "properties": {
+            "start_date": { "type": "string", "format": "date" },
+            "end_date": { "type": ["string", "null"], "format": "date" },
+            "text": {
+              "type": "object",
+              "required": ["fr", "uk"],
+              "properties": {
+                "fr": { "type": "string", "minLength": 1, "maxLength": 300 },
+                "uk": { "type": "string", "minLength": 1, "maxLength": 300 }
+              },
+              "additionalProperties": false
+            },
+            "details": {
+              "type": "object",
+              "required": ["fr", "uk"],
+              "properties": {
+                "fr": { "type": ["string", "null"], "minLength": 1, "maxLength": 1200 },
+                "uk": { "type": ["string", "null"], "minLength": 1, "maxLength": 1200 }
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    }
+  },
+  "additionalProperties": false
+}

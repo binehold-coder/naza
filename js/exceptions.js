@@ -1,9 +1,11 @@
-// Schedule exceptions (vacation, holidays, special hours).
-// Data is embedded in each page by build.py as window.NAZA_EXCEPTIONS = {lang, items}.
+// Schedule exceptions (vacation, holidays, special hours) and the announcement.
+// Data is embedded in each page by build.py as window.NAZA_EXCEPTIONS = {lang, items, announcement}.
 // Renders:
 //  - the detailed notice under the opening hours ([data-exceptions-notice] containers);
 //  - a banner at the top of every page (#exceptions-banner) for exceptions that are
-//    in progress or start within BANNER_DAYS_AHEAD days.
+//    in progress or start within BANNER_DAYS_AHEAD days, followed by the announcement text;
+//  - the announcement block on the home page ([data-announcement-block]): text + details.
+// The announcement is shown from start_date to end_date (inclusive; no end_date = until removed).
 // Items disappear automatically after their end date (Europe/Paris), without rebuilds.
 (function (root) {
     "use strict";
@@ -144,6 +146,14 @@
         };
     }
 
+    // The announcement if it is shown today, else null.
+    function activeAnnouncement(announcement, today) {
+        if (!announcement || !announcement.text) return null;
+        if (announcement.start_date > today) return null;
+        if (announcement.end_date && announcement.end_date < today) return null;
+        return announcement;
+    }
+
     function todayInParis() {
         const parts = Object.fromEntries(new Intl.DateTimeFormat("en-CA", {
             timeZone: "Europe/Paris", year: "numeric", month: "2-digit", day: "2-digit",
@@ -153,7 +163,9 @@
 
     function render(doc, data) {
         const lang = data.lang === "uk" ? "uk" : "fr";
-        const lines = computeLines(lang, data.items || [], todayInParis());
+        const today = todayInParis();
+        const lines = computeLines(lang, data.items || [], today);
+        const announcement = activeAnnouncement(data.announcement, today);
 
         for (const container of doc.querySelectorAll("[data-exceptions-notice]")) {
             container.replaceChildren();
@@ -174,12 +186,41 @@
         const banner = doc.getElementById("exceptions-banner");
         if (banner) {
             banner.replaceChildren();
-            banner.hidden = !lines.banner.length;
+            banner.hidden = !lines.banner.length && !announcement;
             for (const text of lines.banner) {
                 const p = doc.createElement("p");
                 p.textContent = text;
                 banner.appendChild(p);
             }
+            if (announcement) {
+                const p = doc.createElement("p");
+                p.className = "banner-announcement";
+                p.textContent = announcement.text;
+                banner.appendChild(p);
+            }
+        }
+
+        for (const block of doc.querySelectorAll("[data-announcement-block]")) {
+            block.replaceChildren();
+            block.hidden = !announcement;
+            if (!announcement) continue;
+            const container = doc.createElement("div");
+            container.className = "container";
+            const box = doc.createElement("div");
+            box.className = "announcement-box";
+            const title = doc.createElement("p");
+            title.className = "announcement-title";
+            title.textContent = announcement.text;
+            box.appendChild(title);
+            const details = (announcement.details || "").split(/\n+/).map(line => line.trim()).filter(Boolean);
+            for (const line of details) {
+                const p = doc.createElement("p");
+                p.className = "announcement-details";
+                p.textContent = line;
+                box.appendChild(p);
+            }
+            container.appendChild(box);
+            block.appendChild(container);
         }
     }
 
@@ -206,7 +247,7 @@
         win.setInterval(update, 60 * 1000);
     }
 
-    const api = { computeLines, lineText, rangeText, groupDateText, BANNER_DAYS_AHEAD };
+    const api = { computeLines, lineText, rangeText, groupDateText, activeAnnouncement, BANNER_DAYS_AHEAD };
     if (typeof module !== "undefined" && module.exports) {
         module.exports = api;
     } else {
