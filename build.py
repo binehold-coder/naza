@@ -398,16 +398,48 @@ def build_portfolio(env: Environment, portfolio: dict):
                              env.get_template("partials/portfolio_modals.html").render(**context))
 
 
+def load_announcement():
+    """The single announcement (content/announcements.json), or None.
+
+    The file is optional so that content branches created before stage 8 still build.
+    """
+    if not (CONTENT / "announcements.json").exists():
+        return None
+    data = load_json("announcements.json")
+    validate(data, "announcements.schema.json")
+    item = data["announcement"]
+    if item is None:
+        return None
+    if item["end_date"] is not None and item["end_date"] < item["start_date"]:
+        raise SystemExit("Validation failed for announcements.json: end_date is before start_date.")
+    details = item["details"]
+    if (details["fr"] is None) != (details["uk"] is None):
+        raise SystemExit("Validation failed for announcements.json: details must be set in both languages or in none.")
+    for lang in ("fr", "uk"):
+        if not item["text"][lang].strip() or "\n" in item["text"][lang]:
+            raise SystemExit(f"Validation failed for announcements.json: text/{lang} must be one non-empty line.")
+    return item
+
+
+def announcement_for(item, lang: str):
+    """Language-specific announcement data embedded in the pages (shown by date in js/exceptions.js)."""
+    if item is None:
+        return None
+    return {"start_date": item["start_date"], "end_date": item["end_date"],
+            "text": item["text"][lang], "details": item["details"][lang]}
+
+
 def exception_notice_markup(lang: str) -> str:
     """Container for the exceptions notice under the opening hours; filled by js/exceptions.js."""
     return (f'<div id="schedule-exceptions-{lang}" class="mt-3 text-warning" '
             'data-exceptions-notice aria-live="polite" hidden></div>')
 
 
-def inject_exceptions_runtime(path: Path, lang: str, asset_prefix: str, exceptions: list):
-    """Add the exceptions banner and the exceptions data/script to one page."""
+def inject_exceptions_runtime(path: Path, lang: str, asset_prefix: str, exceptions: list, announcement=None):
+    """Add the top banner and the exceptions/announcement data + script to one page."""
     html = path.read_text(encoding="utf-8")
-    payload = json.dumps({"lang": lang, "items": exceptions}, ensure_ascii=False).replace("<", "\\u003c")
+    payload = json.dumps({"lang": lang, "items": exceptions, "announcement": announcement_for(announcement, lang)},
+                         ensure_ascii=False).replace("<", "\\u003c")
     banner = '<div id="exceptions-banner" class="exceptions-banner" role="status" hidden></div>'
     runtime = (f'<script>window.NAZA_EXCEPTIONS = {payload};</script>\n'
                f'<script src="{asset_prefix}js/exceptions.js"></script>\n')
@@ -418,7 +450,7 @@ def inject_exceptions_runtime(path: Path, lang: str, asset_prefix: str, exceptio
     path.write_text(html, encoding="utf-8")
 
 
-def inject_exceptions_everywhere(exceptions: list):
+def inject_exceptions_everywhere(exceptions: list, announcement=None):
     """Every page with the main navbar gets the banner (FR in the root, UA in ua/)."""
     for path in sorted(OUTPUT.rglob("*.html")):
         relative = path.relative_to(OUTPUT)
@@ -426,7 +458,7 @@ def inject_exceptions_everywhere(exceptions: list):
         if 'id="mainNav"' not in html:
             continue
         is_ua = relative.parts[0] == "ua"
-        inject_exceptions_runtime(path, "uk" if is_ua else "fr", "../" if is_ua else "", exceptions)
+        inject_exceptions_runtime(path, "uk" if is_ua else "fr", "../" if is_ua else "", exceptions, announcement)
 
 
 def main():
@@ -437,6 +469,8 @@ def main():
     exceptions = load_json("exceptions.json")
     validate(exceptions, "exceptions.schema.json")
     validate_exceptions_semantics(exceptions)
+
+    announcement = load_announcement()
 
     services = load_json("services.json")
     validate(services, "services.schema.json")
@@ -499,8 +533,8 @@ def main():
     # Phone, email and social links come from content/site.json (contact).
     update_contact_blocks(env, site)
 
-    # Banner + notice data on every page; the script hides past items by date.
-    inject_exceptions_everywhere(exceptions["exceptions"])
+    # Banner + notice + announcement data on every page; the script shows items by date.
+    inject_exceptions_everywhere(exceptions["exceptions"], announcement)
 
     print("Build successful: complete FR/UA site copied to ./preview-site.")
     print("Generated FR/UA homepages, synchronized contact schedules, added exception notices and banners.")
