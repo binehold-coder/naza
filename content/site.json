@@ -230,55 +230,55 @@
     "process": {
       "heading": {
         "fr": "Notre Processus",
-        "uk": null
+        "uk": "Як ми працюємо"
       },
       "intro": {
         "fr": "Comment se déroule votre commande à l'atelier.",
-        "uk": null
+        "uk": "Як виконується ваше замовлення в ательє."
       },
       "steps": [
         {
           "id": "visit-contact",
           "title": {
             "fr": "Visite ou Contact",
-            "uk": null
+            "uk": "Візит або зв'язок"
           },
           "description": {
             "fr": "Venez à l'atelier avec votre vêtement ou contactez-nous pour discuter de votre projet de création.",
-            "uk": null
+            "uk": "Приходьте в ательє зі своїм одягом або зв'яжіться з нами, щоб обговорити ваш проєкт пошиву."
           }
         },
         {
           "id": "measure-quote",
           "title": {
             "fr": "Mesures & Devis",
-            "uk": null
+            "uk": "Мірки та вартість"
           },
           "description": {
             "fr": "Nous prenons les mesures nécessaires et fixons ensemble le prix exact de la prestation.",
-            "uk": null
+            "uk": "Ми знімаємо необхідні мірки й разом із вами погоджуємо точну вартість роботи."
           }
         },
         {
           "id": "production",
           "title": {
             "fr": "Réalisation",
-            "uk": null
+            "uk": "Виконання"
           },
           "description": {
             "fr": "Nous effectuons les retouches ou le sur-mesure avec une précision maximale et une attention particulière aux détails.",
-            "uk": null
+            "uk": "Ми виконуємо ремонт, підгонку або індивідуальний пошив з максимальною точністю та особливою увагою до деталей."
           }
         },
         {
           "id": "fitting-delivery",
           "title": {
             "fr": "Essayage & Remise",
-            "uk": null
+            "uk": "Примірка та видача"
           },
           "description": {
             "fr": "Vous essayez votre vêtement retouché ou créé sur mesure, puis vous repartez avec.",
-            "uk": null
+            "uk": "Ви приміряєте відремонтований або пошитий на замовлення одяг і забираєте його."
           }
         }
       ]
@@ -323,24 +323,6 @@
       "field": "opening_hours.sunday",
       "status": "needs_confirmation",
       "note": "Sunday hours were not present in source; null means unknown, not confirmed closed."
-    },
-    {
-      "id": "LANG-003",
-      "field": "pages.process",
-      "status": "translation_missing",
-      "note": "French process content exists; Ukrainian text intentionally left null until approved translation."
-    },
-    {
-      "id": "LANG-002",
-      "field": "pages.legal",
-      "status": "translation_missing",
-      "note": "Legal page currently exists only in French."
-    },
-    {
-      "id": "LEGAL-001",
-      "field": "pages.legal.privacy_statement",
-      "status": "review_required",
-      "note": "Existing cookie/privacy statement is transcribed as-is; verify third-party embeds and GDPR before changing."
     }
   ]
 }
