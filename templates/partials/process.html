@@ -1,0 +1,19 @@
+{%- set icons = ["fa-store", "fa-ruler-combined", "fa-tshirt", "fa-check-circle"] -%}
+{%- set process = site.pages.process -%}
+<section class="page-section bg-light py-5">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="section-heading text-uppercase">{{ process.heading[lang] }}</h2>
+            <h3 class="section-subheading text-muted">{{ process.intro[lang] }}</h3>
+        </div>
+        <div class="row text-center">
+            {%- for step in process.steps %}
+            <div class="col-md-3{% if not loop.last %} mb-4 mb-md-0{% endif %}">
+                <div class="text-primary mb-3"><i class="fas {{ icons[loop.index0 % icons|length] }} fa-2x"></i></div>
+                <h4 class="h5 text-uppercase">{{ loop.index }}. {{ step.title[lang] }}</h4>
+                <p class="text-muted small mb-0">{{ step.description[lang] }}</p>
+            </div>
+            {%- endfor %}
+        </div>
+    </div>
+</section>

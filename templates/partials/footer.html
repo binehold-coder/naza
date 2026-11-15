@@ -6,7 +6,7 @@
                 {% filter indent(16, first=true) %}{% include "partials/social_links.html" %}{% endfilter %}
             </div>
             <div class="col-lg-4 text-lg-end">
-                <a class="link-dark text-decoration-none" href="/legal.html">{{ site.pages.footer.legal_link[lang] }}</a>
+                <a class="link-dark text-decoration-none" href="{{ '/ua/legal.html' if lang == 'uk' else '/legal.html' }}">{{ site.pages.footer.legal_link[lang] }}</a>
             </div>
         </div>
     </div>

@@ -315,7 +315,7 @@ SOCIAL_NETWORKS = {
 }
 # Pages whose contact data come from site.json (generated home pages use the templates directly).
 SOCIAL_PAGES = ("about", "contact", "legal", "portfolio", "services",
-                "ua/about", "ua/contact", "ua/portfolio", "ua/services")
+                "ua/about", "ua/contact", "ua/legal", "ua/portfolio", "ua/services")
 
 
 def validate_contact_semantics(site: dict):
@@ -355,8 +355,13 @@ def update_contact_blocks(env: Environment, site: dict):
     for rel, lang in (("contact", "fr"), ("ua/contact", "uk")):
         replace_marked_block(OUTPUT / f"{rel}.html", "contact-details",
                              env.get_template("partials/contact_details.html").render(site=site, lang=lang))
-    replace_marked_block(OUTPUT / "legal.html", "legal-contact",
-                         env.get_template("partials/legal_contact.html").render(site=site))
+    for rel, lang in (("legal", "fr"), ("ua/legal", "uk")):
+        replace_marked_block(OUTPUT / f"{rel}.html", "legal-contact",
+                             env.get_template("partials/legal_contact.html").render(site=site, lang=lang))
+    # "Notre Processus" / "Як ми працюємо" on the services pages (site.json → pages.process).
+    for rel, lang in (("services", "fr"), ("ua/services", "uk")):
+        replace_marked_block(OUTPUT / f"{rel}.html", "process",
+                             env.get_template("partials/process.html").render(site=site, lang=lang))
 
 
 # ---------- map ----------
@@ -396,7 +401,7 @@ PAGE_PAIRS = {
     "services.html": "ua/services.html",
     "portfolio.html": "ua/portfolio.html",
     "contact.html": "ua/contact.html",
-    "legal.html": None,
+    "legal.html": "ua/legal.html",
 }
 
 

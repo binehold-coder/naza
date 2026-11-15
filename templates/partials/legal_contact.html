@@ -1,2 +1,3 @@
-<p class="mb-3"><strong>Téléphone :</strong> <a href="tel:{{ site.contact.phone_e164 }}">{{ site.contact.phone_display }}</a></p>
-<p class="mb-3"><strong>Email :</strong> <a href="mailto:{{ site.contact.email }}">{{ site.contact.email }}</a></p>
+{%- set labels = {"fr": ("Téléphone :", "Email :"), "uk": ("Телефон:", "Email:")}[lang] -%}
+<p class="mb-3"><strong>{{ labels[0] }}</strong> <a href="tel:{{ site.contact.phone_e164 }}">{{ site.contact.phone_display }}</a></p>
+<p class="mb-3"><strong>{{ labels[1] }}</strong> <a href="mailto:{{ site.contact.email }}">{{ site.contact.email }}</a></p>
