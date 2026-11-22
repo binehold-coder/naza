@@ -22,7 +22,9 @@ RENEWAL=/etc/letsencrypt/renewal/$DOMAIN.conf
 
 SUDO=(); [[ $(id -u) == 0 ]] || SUDO=(sudo -n)
 say() { printf '\n=== %s\n' "$*"; }
-die() { printf 'ОШИБКА: %s\n' "$*" >&2; exit 1; }
+# ::error:: / ::notice:: lines become annotations on the GitHub run (readable without logs)
+die() { printf '::error title=server.sh::%s\n' "$*"; exit 1; }
+ok() { printf '::notice title=server.sh::%s\n' "$*"; }
 have_cert() { "${SUDO[@]}" test -f "$CERT"; }
 
 ensure_dig() {
@@ -52,7 +54,7 @@ stage_site() {
 	# atomic switch: new symlink next to the old one, then rename over it
 	"${SUDO[@]}" ln -sfn "$rel" "$ROOT_LINK.tmp"
 	"${SUDO[@]}" mv -Tf "$ROOT_LINK.tmp" "$ROOT_LINK"
-	echo "Текущий релиз: $(readlink "$ROOT_LINK")"
+	ok "Опубликован релиз $(basename "$(readlink "$ROOT_LINK")")"
 
 	# keep the newest $KEEP releases
 	ls -1d "$RELEASES"/*/ 2>/dev/null | sort | head -n -"$KEEP" | while read -r old; do
@@ -114,14 +116,14 @@ stage_check() {
 		code=$(curl -s -o /dev/null -w '%{http_code} %{redirect_url}' "${r[@]}" "https://$DOMAIN/services.html")
 		[[ $code == "301 https://$WWW/services.html" ]] || die "редирект $DOMAIN → $WWW не работает: $code"
 		"${SUDO[@]}" openssl x509 -noout -enddate -ext subjectAltName -in "$CERT"
-		echo "OK: HTTPS, оба имени, 404, редирект на www"
+		ok "Проверка на сервере: HTTPS, оба имени, 404, редирект на www — OK"
 	else
 		for h in "$DOMAIN" "$WWW"; do
 			has "Naza Couture" -H "Host: $h" "http://127.0.0.1/" || die "http://$h/ не отдаёт главную"
 		done
 		code=$(curl -s -o /dev/null -w '%{http_code}' -H "Host: $WWW" "http://127.0.0.1/no-such-page")
 		[[ $code == 404 ]] || die "несуществующая страница отдаёт $code вместо 404"
-		echo "OK: HTTP для обоих имён, 404"
+		ok "Проверка на сервере: HTTP для обоих имён, 404 — OK"
 	fi
 }
 
@@ -168,9 +170,12 @@ stage_cert_dns() {
 	ensure_dig; check_caa
 	if have_cert; then echo "Сертификат уже есть — DNS-01 не нужен"; return; fi
 	say "Сертификат заранее через DNS-01 (сайт продолжает работать на Vercel)"
+	[[ -n ${IONOS_API_KEY:-} ]] || die "нет IONOS_API_KEY (секрет репозитория)"
 	local dir=/tmp/naza-acme
-	rm -rf "$dir"; mkdir -p "$dir"; : > "$dir/log"
+	"${SUDO[@]}" rm -rf "$dir"; mkdir -m 700 "$dir"; : > "$dir/log"; chmod 644 "$dir/log"
 	install -m 755 "$B/acme-dns-hook.sh" "$dir/hook.sh"
+	install -m 644 "$B/ionos_dns.py" "$dir/ionos_dns.py"
+	( umask 077; printf '%s' "$IONOS_API_KEY" > "$dir/key" )
 	# certbot captures hook output, so the hook writes to $dir/log and we stream it live
 	tail -n +1 -F "$dir/log" 2>/dev/null & local tailpid=$!
 	local rc=0
@@ -180,9 +185,10 @@ stage_cert_dns() {
 		--cert-name "$DOMAIN" -d "$DOMAIN" -d "$WWW" \
 		--non-interactive --agree-tos --keep-until-expiring || rc=$?
 	sleep 1; kill "$tailpid" 2>/dev/null || true
-	[[ $rc == 0 ]] || die "certbot завершился с ошибкой ($rc)"
+	"${SUDO[@]}" rm -f "$dir/key"
+	[[ $rc == 0 ]] || die "certbot (DNS-01) завершился с ошибкой ($rc)"
 	have_cert || die "сертификат не получен"
-	echo "Сертификат получен. ВАЖНО: продление DNS-01 вручную не работает — после смены A-записей запустить action=cert."
+	ok "Сертификат для обоих имён получен (DNS-01). Автопродление включит action=cert после смены DNS."
 }
 
 # ---------- certificate / renewal through HTTP-01 (after the DNS switch) ----------
@@ -215,7 +221,7 @@ stage_cert() {
 		|| die "certbot.timer не активен"
 	systemctl list-timers certbot.timer --no-pager | head -3
 	"${SUDO[@]}" certbot renew --dry-run --cert-name "$DOMAIN" --no-random-sleep-on-renew
-	echo "OK: пробное продление прошло"
+	ok "Автопродление: certbot.timer активен, renew --dry-run прошёл"
 }
 
 stage_status() {

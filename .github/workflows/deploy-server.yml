@@ -2,9 +2,11 @@ name: Deploy to IONOS
 
 # Static site naza-couture.fr on the IONOS VPS (nginx). Replaces Vercel.
 #   push to main             -> build (build.py) and publish to /var/www/naza-couture.fr
-#   Run workflow (main)      -> choose action: deploy | cert-dns | cert | status
-#   push ops/<action>-<any>  -> same actions without publishing the site (for Claude, no UI button)
-# Server work is in .github/deploy/server.sh; other nginx sites on the server are never edited.
+#   Run workflow (main)      -> choose an action (see inputs)
+#   push ops/<action>-<any>  -> same, without the UI (used by Claude). ops/deploy-* only
+#                               runs when the branch points at the current main commit.
+# Server work: .github/deploy/server.sh. DNS: .github/deploy/ionos_dns.py (IONOS DNS API).
+# Other nginx sites on the server and other DNS records are never edited.
 
 on:
   push:
@@ -14,9 +16,9 @@ on:
   workflow_dispatch:
     inputs:
       action:
-        description: "deploy = опубликовать сайт; cert-dns = сертификат до смены DNS; cert = сертификат/автопродление после смены DNS; status = проверка"
+        description: "deploy | cert-dns (сертификат до смены DNS) | migrate (cert-dns → DNS на сервер → автопродление) | cert | status | dns-show"
         type: choice
-        options: [deploy, cert-dns, cert, status]
+        options: [deploy, cert-dns, migrate, cert, status, dns-show]
         default: deploy
 
 # The Telegram bot (binehold-coder/naza-bot) waits for a GitHub Deployment whose environment
@@ -29,10 +31,13 @@ concurrency:
   group: deploy-ionos
   cancel-in-progress: false
 
+env:
+  SERVER_IP: 87.106.25.155
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 75
+    timeout-minutes: 120
     steps:
       - name: Choose action
         id: act
@@ -40,31 +45,58 @@ jobs:
           set -euo pipefail
           ref="${GITHUB_REF#refs/heads/}"
           if [ "$GITHUB_EVENT_NAME" = workflow_dispatch ]; then
-            [ "$ref" = main ] || { echo "Запускать только из main"; exit 1; }
+            [ "$ref" = main ] || { echo "::error::Запускать только из main"; exit 1; }
             action="${{ inputs.action }}"
           elif [ "$ref" = main ]; then
             action=deploy
           else
-            action="$(echo "$ref" | sed -nE 's#^ops/(cert-dns|cert|status)(-.*)?$#\1#p')"
-            [ -n "$action" ] || { echo "Ветка $ref: ожидается ops/cert-dns-*, ops/cert-* или ops/status-*"; exit 1; }
+            action="$(echo "$ref" | sed -nE 's#^ops/(deploy|cert-dns|migrate|cert|status|dns-show)(-.*)?$#\1#p')"
+            [ -n "$action" ] || { echo "::error::Ветка $ref: ожидается ops/<action>-..."; exit 1; }
+            if [ "$action" = deploy ]; then
+              main_sha="$(git ls-remote "https://github.com/$GITHUB_REPOSITORY" refs/heads/main | cut -f1)"
+              [ "$main_sha" = "$GITHUB_SHA" ] || { echo "::error::ops/deploy: ветка не совпадает с main ($main_sha)"; exit 1; }
+            fi
           fi
+          flag() { case " $2 " in *" $action "*) echo "$1=true" >> "$GITHUB_OUTPUT";; esac; }
+          flag build   "deploy"
+          flag server  "deploy cert-dns migrate cert status"
+          flag certdns "cert-dns migrate"
+          flag switch  "migrate"
+          flag cert    "migrate cert"
           echo "action=$action" >> "$GITHUB_OUTPUT"
-          echo "Действие: **$action** ($ref @ ${GITHUB_SHA::7})" >> "$GITHUB_STEP_SUMMARY"
+          echo "::notice title=action::$action ($ref @ ${GITHUB_SHA::7})"
 
       - name: Check secrets
         env:
           H: ${{ secrets.DEPLOY_HOST }}
           U: ${{ secrets.DEPLOY_USER }}
           K: ${{ secrets.DEPLOY_SSH_KEY }}
+          I: ${{ secrets.IONOS_API_KEY }}
+          NEED_SSH: ${{ steps.act.outputs.server }}
+          NEED_DNS: ${{ steps.act.outputs.certdns || steps.act.outputs.action == 'dns-show' }}
         run: |
-          [ -n "$H" ] && [ -n "$U" ] && [ -n "$K" ] || {
-            echo "Нет секретов DEPLOY_HOST / DEPLOY_USER / DEPLOY_SSH_KEY в настройках репозитория"; exit 1; }
+          miss=""
+          if [ "$NEED_SSH" = true ]; then
+            [ -n "$H" ] || miss+=" DEPLOY_HOST"; [ -n "$U" ] || miss+=" DEPLOY_USER"; [ -n "$K" ] || miss+=" DEPLOY_SSH_KEY"
+          fi
+          if [ "$NEED_DNS" = true ]; then [ -n "$I" ] || miss+=" IONOS_API_KEY"; fi
+          [ -z "$miss" ] || { echo "::error title=secrets::Нет секретов:$miss"; exit 1; }
 
       - uses: actions/checkout@v4
 
+      - name: DNS — current records
+        if: steps.act.outputs.action == 'dns-show' || steps.act.outputs.switch
+        env:
+          IONOS_API_KEY: ${{ secrets.IONOS_API_KEY }}
+        run: |
+          set -euo pipefail
+          out="$(python3 .github/deploy/ionos_dns.py show)"
+          echo "$out"
+          echo "::notice title=DNS @ / www::$(echo "$out" | grep -E ' (naza-couture\.fr|www\.naza-couture\.fr) ' | grep -E '^(A|AAAA|CNAME|CAA) ' | tr -s ' ' | paste -sd ';')"
+
       - name: GitHub Deployment "Production" — in progress (for the bot)
         id: gh_deploy
-        if: steps.act.outputs.action == 'deploy'
+        if: steps.act.outputs.build
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -77,18 +109,19 @@ jobs:
             -f log_url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" >/dev/null
 
       - uses: actions/setup-python@v5
-        if: steps.act.outputs.action == 'deploy'
+        if: steps.act.outputs.build
         with:
           python-version-file: .python-version
 
       - name: Build site (build.py → preview-site)
-        if: steps.act.outputs.action == 'deploy'
+        if: steps.act.outputs.build
         run: |
           pip install --quiet -r requirements.txt
           python build.py
           test -f preview-site/index.html && test -f preview-site/ua/index.html
 
       - name: Pack bundle
+        if: steps.act.outputs.server
         run: |
           set -euo pipefail
           mkdir -p bundle
@@ -98,6 +131,7 @@ jobs:
           tar -czf naza_bundle.tar.gz bundle
 
       - name: Check — passwordless sudo
+        if: steps.act.outputs.server
         uses: appleboy/ssh-action@v1.2.2
         with:
           host: ${{ secrets.DEPLOY_HOST }}
@@ -105,9 +139,10 @@ jobs:
           key: ${{ secrets.DEPLOY_SSH_KEY }}
           script: |
             if [ "$(id -u)" = 0 ] || sudo -n true; then echo "sudo OK ($(id -un))"; else
-              echo "Пользователю $(id -un) нужен sudo без пароля"; exit 1; fi
+              echo "::error::Пользователю $(id -un) нужен sudo без пароля"; exit 1; fi
 
       - name: Upload bundle
+        if: steps.act.outputs.server
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.DEPLOY_HOST }}
@@ -117,7 +152,17 @@ jobs:
           target: /tmp/naza_deploy
           overwrite: true
 
-      - name: Server — ${{ steps.act.outputs.action }}
+      - name: Server — unpack
+        if: steps.act.outputs.server
+        uses: appleboy/ssh-action@v1.2.2
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          script: cd /tmp/naza_deploy && rm -rf bundle && tar -xzf naza_bundle.tar.gz && ls bundle
+
+      - name: Server — deploy / status
+        if: steps.act.outputs.action == 'deploy' || steps.act.outputs.action == 'status'
         uses: appleboy/ssh-action@v1.2.2
         env:
           ACTION: ${{ steps.act.outputs.action }}
@@ -127,24 +172,90 @@ jobs:
           username: ${{ secrets.DEPLOY_USER }}
           key: ${{ secrets.DEPLOY_SSH_KEY }}
           envs: ACTION,REVISION
-          command_timeout: 60m
-          script: |
-            set -euo pipefail
-            cd /tmp/naza_deploy
-            rm -rf bundle && tar -xzf naza_bundle.tar.gz
-            export REVISION="${REVISION:0:7}"
-            rc=0; bash bundle/server.sh "$ACTION" || rc=$?
-            cd / && rm -rf /tmp/naza_deploy
-            exit $rc
+          command_timeout: 15m
+          script: REVISION="${REVISION:0:7}" bash /tmp/naza_deploy/bundle/server.sh "$ACTION"
+
+      - name: Server — certificate before DNS switch (DNS-01 via IONOS API)
+        if: steps.act.outputs.certdns
+        uses: appleboy/ssh-action@v1.2.2
+        env:
+          IONOS_API_KEY: ${{ secrets.IONOS_API_KEY }}
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          envs: IONOS_API_KEY
+          command_timeout: 30m
+          script: bash /tmp/naza_deploy/bundle/server.sh cert-dns
+
+      - name: DNS — @ and www → server (IONOS API)
+        if: steps.act.outputs.switch
+        env:
+          IONOS_API_KEY: ${{ secrets.IONOS_API_KEY }}
+        run: |
+          set -euo pipefail
+          out="$(python3 .github/deploy/ionos_dns.py switch "$SERVER_IP")"
+          echo "$out"
+          # keep the old values visible on the run page in case a rollback is needed
+          echo "::notice title=DNS switched — old values::$(echo "$out" | sed -n '/BEFORE/,/AFTER/p' | grep -v -e BEFORE -e AFTER | tr -s ' ' | paste -sd ';')"
+
+      - name: DNS — wait until public resolvers see the server
+        if: steps.act.outputs.switch
+        run: |
+          set -uo pipefail
+          command -v dig >/dev/null || sudo apt-get install -y -qq dnsutils >/dev/null
+          ns="$(dig +short NS naza-couture.fr @1.1.1.1 | sed 's/\.$//')"
+          bad="?"
+          for i in $(seq 1 90); do
+            bad=""
+            for n in naza-couture.fr www.naza-couture.fr; do
+              for s in $ns 1.1.1.1 8.8.8.8 9.9.9.9; do
+                a="$(dig +short A "$n" @"$s" | grep -E '^[0-9.]+$' | sort -u | paste -sd ' ')"
+                [ "$a" = "$SERVER_IP" ] || bad+=" $n@$s=$a"
+              done
+            done
+            [ -z "$bad" ] && { echo "::notice title=DNS::оба имени → $SERVER_IP на всех проверенных DNS"; exit 0; }
+            echo "$(date +%H:%M) ($i) ждём:$bad"
+            sleep 60
+          done
+          echo "::error title=DNS::за 90 минут не обновился:$bad"; exit 1
+
+      - name: Server — certificate auto-renewal (HTTP-01) + checks
+        if: steps.act.outputs.cert
+        uses: appleboy/ssh-action@v1.2.2
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          command_timeout: 15m
+          script: bash /tmp/naza_deploy/bundle/server.sh cert
+
+      - name: Server — cleanup
+        if: always() && steps.act.outputs.server
+        continue-on-error: true
+        uses: appleboy/ssh-action@v1.2.2
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          script: rm -rf /tmp/naza_deploy; sudo -n rm -f /tmp/naza-acme/key 2>/dev/null || true
 
       - name: External check (real DNS)
-        if: steps.act.outputs.action != 'cert-dns'
+        if: steps.act.outputs.action != 'cert-dns' && steps.act.outputs.action != 'dns-show'
+        env:
+          STRICT: ${{ steps.act.outputs.cert }}
         run: |
+          set -uo pipefail
           for u in https://www.naza-couture.fr/ https://naza-couture.fr/; do
-            echo "== $u"
-            curl -sS -o /dev/null -D - --max-time 15 "$u" | grep -iE '^(HTTP|server|location|x-vercel)' || true
+            h="$(curl -sS -o /dev/null -D - --max-time 15 "$u" | tr -d '\r')"
+            code="$(echo "$h" | head -1 | cut -d' ' -f2)"
+            srv="$(echo "$h" | grep -i '^server:' | head -1 | cut -d' ' -f2-)"
+            loc="$(echo "$h" | grep -i '^location:' | head -1 | cut -d' ' -f2-)"
+            echo "::notice title=external $u::$code server=$srv ${loc:+→ $loc}"
+            if [ "$STRICT" = true ] && [ "$srv" != nginx ]; then
+              echo "::error title=external::$u отвечает не nginx ($srv)"; exit 1
+            fi
           done
-          echo "server: nginx = отвечает IONOS, server: Vercel = DNS ещё смотрит на Vercel"
 
       - name: GitHub Deployment "Production" — result (for the bot)
         if: always() && steps.gh_deploy.outputs.id != ''
