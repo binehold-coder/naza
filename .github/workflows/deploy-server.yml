@@ -1,0 +1,127 @@
+name: Deploy to IONOS
+
+# Static site naza-couture.fr on the IONOS VPS (nginx). Replaces Vercel.
+#   push to main             -> build (build.py) and publish to /var/www/naza-couture.fr
+#   Run workflow (main)      -> choose action: deploy | cert-dns | cert | status
+#   push ops/<action>-<any>  -> same actions without publishing the site (for Claude, no UI button)
+# Server work is in .github/deploy/server.sh; other nginx sites on the server are never edited.
+
+on:
+  push:
+    branches:
+      - main
+      - "ops/**"
+  workflow_dispatch:
+    inputs:
+      action:
+        description: "deploy = опубликовать сайт; cert-dns = сертификат до смены DNS; cert = сертификат/автопродление после смены DNS; status = проверка"
+        type: choice
+        options: [deploy, cert-dns, cert, status]
+        default: deploy
+
+concurrency:
+  group: deploy-ionos
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    steps:
+      - name: Choose action
+        id: act
+        run: |
+          set -euo pipefail
+          ref="${GITHUB_REF#refs/heads/}"
+          if [ "$GITHUB_EVENT_NAME" = workflow_dispatch ]; then
+            [ "$ref" = main ] || { echo "Запускать только из main"; exit 1; }
+            action="${{ inputs.action }}"
+          elif [ "$ref" = main ]; then
+            action=deploy
+          else
+            action="$(echo "$ref" | sed -nE 's#^ops/(cert-dns|cert|status)(-.*)?$#\1#p')"
+            [ -n "$action" ] || { echo "Ветка $ref: ожидается ops/cert-dns-*, ops/cert-* или ops/status-*"; exit 1; }
+          fi
+          echo "action=$action" >> "$GITHUB_OUTPUT"
+          echo "Действие: **$action** ($ref @ ${GITHUB_SHA::7})" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Check secrets
+        env:
+          H: ${{ secrets.DEPLOY_HOST }}
+          U: ${{ secrets.DEPLOY_USER }}
+          K: ${{ secrets.DEPLOY_SSH_KEY }}
+        run: |
+          [ -n "$H" ] && [ -n "$U" ] && [ -n "$K" ] || {
+            echo "Нет секретов DEPLOY_HOST / DEPLOY_USER / DEPLOY_SSH_KEY в настройках репозитория"; exit 1; }
+
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        if: steps.act.outputs.action == 'deploy'
+        with:
+          python-version-file: .python-version
+
+      - name: Build site (build.py → preview-site)
+        if: steps.act.outputs.action == 'deploy'
+        run: |
+          pip install --quiet -r requirements.txt
+          python build.py
+          test -f preview-site/index.html && test -f preview-site/ua/index.html
+
+      - name: Pack bundle
+        run: |
+          set -euo pipefail
+          mkdir -p bundle
+          cp .github/deploy/* bundle/
+          chmod +x bundle/*.sh
+          if [ -d preview-site ]; then tar -czf bundle/site.tar.gz -C preview-site .; fi
+          tar -czf naza_bundle.tar.gz bundle
+
+      - name: Check — passwordless sudo
+        uses: appleboy/ssh-action@v1.2.2
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          script: |
+            if [ "$(id -u)" = 0 ] || sudo -n true; then echo "sudo OK ($(id -un))"; else
+              echo "Пользователю $(id -un) нужен sudo без пароля"; exit 1; fi
+
+      - name: Upload bundle
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          source: naza_bundle.tar.gz
+          target: /tmp/naza_deploy
+          overwrite: true
+
+      - name: Server — ${{ steps.act.outputs.action }}
+        uses: appleboy/ssh-action@v1.2.2
+        env:
+          ACTION: ${{ steps.act.outputs.action }}
+          REVISION: ${{ github.sha }}
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          envs: ACTION,REVISION
+          command_timeout: 60m
+          script: |
+            set -euo pipefail
+            cd /tmp/naza_deploy
+            rm -rf bundle && tar -xzf naza_bundle.tar.gz
+            export REVISION="${REVISION:0:7}"
+            rc=0; bash bundle/server.sh "$ACTION" || rc=$?
+            cd / && rm -rf /tmp/naza_deploy
+            exit $rc
+
+      - name: External check (real DNS)
+        if: steps.act.outputs.action != 'cert-dns'
+        run: |
+          for u in https://www.naza-couture.fr/ https://naza-couture.fr/; do
+            echo "== $u"
+            curl -sS -o /dev/null -D - --max-time 15 "$u" | grep -iE '^(HTTP|server|location|x-vercel)' || true
+          done
+          echo "server: nginx = отвечает IONOS, server: Vercel = DNS ещё смотрит на Vercel"
