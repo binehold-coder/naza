@@ -10,6 +10,10 @@ Workflow: `.github/workflows/deploy-server.yml`. Server script: `server.sh`.
   Every change: `nginx -t` first; on failure the previous config is restored, no reload.
 - Certificate: one Let's Encrypt cert for `naza-couture.fr` + `www`, renewed by `certbot.timer`
   via webroot `/var/www/letsencrypt`, deploy hook reloads nginx.
+- Telegram bot (`naza-bot`): publishes by merging `content-draft` into `main` → this workflow
+  deploys it. The bot waits for a GitHub Deployment with environment `Production`; the workflow
+  creates it (in_progress → success/failure). Bot previews (`Preview` deployments of
+  `content-draft`, and the test publish branch) still come from Vercel.
 - Secrets (repo settings): `DEPLOY_HOST`, `DEPLOY_USER`, `DEPLOY_SSH_KEY` — same values as in `my_budget`.
 
 Actions (Actions → Deploy to IONOS → Run workflow, or push `ops/<action>-<anything>`):

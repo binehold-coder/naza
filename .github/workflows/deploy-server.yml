@@ -19,6 +19,12 @@ on:
         options: [deploy, cert-dns, cert, status]
         default: deploy
 
+# The Telegram bot (binehold-coder/naza-bot) waits for a GitHub Deployment whose environment
+# contains "Production" (Vercel used to report it). This workflow reports it now.
+permissions:
+  contents: read
+  deployments: write
+
 concurrency:
   group: deploy-ionos
   cancel-in-progress: false
@@ -55,6 +61,20 @@ jobs:
             echo "Нет секретов DEPLOY_HOST / DEPLOY_USER / DEPLOY_SSH_KEY в настройках репозитория"; exit 1; }
 
       - uses: actions/checkout@v4
+
+      - name: GitHub Deployment "Production" — in progress (for the bot)
+        id: gh_deploy
+        if: steps.act.outputs.action == 'deploy'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          id=$(jq -n --arg ref "$GITHUB_SHA" '{ref:$ref, environment:"Production", auto_merge:false,
+                required_contexts:[], production_environment:true, description:"IONOS VPS"}' \
+            | gh api "repos/$GITHUB_REPOSITORY/deployments" --input - --jq .id)
+          echo "id=$id" >> "$GITHUB_OUTPUT"
+          gh api "repos/$GITHUB_REPOSITORY/deployments/$id/statuses" -f state=in_progress \
+            -f log_url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" >/dev/null
 
       - uses: actions/setup-python@v5
         if: steps.act.outputs.action == 'deploy'
@@ -125,3 +145,15 @@ jobs:
             curl -sS -o /dev/null -D - --max-time 15 "$u" | grep -iE '^(HTTP|server|location|x-vercel)' || true
           done
           echo "server: nginx = отвечает IONOS, server: Vercel = DNS ещё смотрит на Vercel"
+
+      - name: GitHub Deployment "Production" — result (for the bot)
+        if: always() && steps.gh_deploy.outputs.id != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RESULT: ${{ job.status }}
+        run: |
+          state=failure; [ "$RESULT" = success ] && state=success
+          gh api "repos/$GITHUB_REPOSITORY/deployments/${{ steps.gh_deploy.outputs.id }}/statuses" \
+            -f state="$state" -f environment_url=https://www.naza-couture.fr/ \
+            -f log_url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" >/dev/null
+          echo "Deployment для бота: $state"
