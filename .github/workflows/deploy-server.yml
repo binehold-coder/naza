@@ -82,7 +82,7 @@ jobs:
           if [ "$NEED_DNS" = true ]; then [ -n "$I" ] || miss+=" IONOS_API_KEY"; fi
           [ -z "$miss" ] || { echo "::error title=secrets::Нет секретов:$miss"; exit 1; }
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: DNS — current records
         if: steps.act.outputs.action == 'dns-show' || steps.act.outputs.switch
@@ -108,7 +108,7 @@ jobs:
           gh api "repos/$GITHUB_REPOSITORY/deployments/$id/statuses" -f state=in_progress \
             -f log_url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" >/dev/null
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         if: steps.act.outputs.build
         with:
           python-version-file: .python-version
@@ -245,7 +245,7 @@ jobs:
         env:
           STRICT: ${{ steps.act.outputs.cert }}
         run: |
-          set -uo pipefail
+          set +e
           for u in https://www.naza-couture.fr/ https://naza-couture.fr/; do
             h="$(curl -sS -o /dev/null -D - --max-time 15 "$u" | tr -d '\r')"
             code="$(echo "$h" | head -1 | cut -d' ' -f2)"
