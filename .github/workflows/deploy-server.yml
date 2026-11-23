@@ -204,9 +204,10 @@ jobs:
         run: |
           set +e
           command -v dig >/dev/null || sudo apt-get install -y -qq dnsutils >/dev/null
-          ns="$(dig +short NS naza-couture.fr @1.1.1.1 | sed 's/\.$//')"
           bad="?"
           for i in $(seq 1 90); do
+            # re-read the NS set each time: right after a nameserver change the old set stays cached
+            ns="$(dig +short NS naza-couture.fr @1.1.1.1 | sed 's/\.$//')"
             bad=""
             for n in naza-couture.fr www.naza-couture.fr; do
               for s in $ns 1.1.1.1 8.8.8.8 9.9.9.9; do
