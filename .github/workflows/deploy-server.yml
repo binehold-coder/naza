@@ -18,7 +18,7 @@ on:
       action:
         description: "deploy | cert-dns (сертификат до смены DNS) | migrate (cert-dns → DNS на сервер → автопродление) | cert | status | dns-show"
         type: choice
-        options: [deploy, cert-dns, migrate, cert, status, dns-show]
+        options: [deploy, cert-dns, migrate, cert, status, dns-show, dns-switch]
         default: deploy
 
 # The Telegram bot (binehold-coder/naza-bot) waits for a GitHub Deployment whose environment
@@ -50,7 +50,7 @@ jobs:
           elif [ "$ref" = main ]; then
             action=deploy
           else
-            action="$(echo "$ref" | sed -nE 's#^ops/(deploy|cert-dns|migrate|cert|status|dns-show)(-.*)?$#\1#p')"
+            action="$(echo "$ref" | sed -nE 's#^ops/(deploy|cert-dns|migrate|cert|status|dns-show|dns-switch)(-.*)?$#\1#p')"
             [ -n "$action" ] || { echo "::error::Ветка $ref: ожидается ops/<action>-..."; exit 1; }
             if [ "$action" = deploy ]; then
               main_sha="$(git ls-remote "https://github.com/$GITHUB_REPOSITORY" refs/heads/main | cut -f1)"
@@ -61,7 +61,7 @@ jobs:
           flag build   "deploy"
           flag server  "deploy cert-dns migrate cert status"
           flag certdns "cert-dns migrate"
-          flag switch  "migrate"
+          flag switch  "migrate dns-switch"
           flag cert    "migrate cert"
           echo "action=$action" >> "$GITHUB_OUTPUT"
           echo "::notice title=action::$action ($ref @ ${GITHUB_SHA::7})"
@@ -73,7 +73,7 @@ jobs:
           K: ${{ secrets.DEPLOY_SSH_KEY }}
           I: ${{ secrets.IONOS_API_KEY }}
           NEED_SSH: ${{ steps.act.outputs.server }}
-          NEED_DNS: ${{ steps.act.outputs.certdns || steps.act.outputs.action == 'dns-show' }}
+          NEED_DNS: ${{ steps.act.outputs.certdns || steps.act.outputs.switch || steps.act.outputs.action == 'dns-show' }}
         run: |
           miss=""
           if [ "$NEED_SSH" = true ]; then
@@ -200,7 +200,7 @@ jobs:
           echo "::notice title=DNS switched — old values::$(echo "$out" | sed -n '/BEFORE/,/AFTER/p' | grep -v -e BEFORE -e AFTER | tr -s ' ' | paste -sd ';')"
 
       - name: DNS — wait until public resolvers see the server
-        if: steps.act.outputs.switch
+        if: steps.act.outputs.action == 'migrate'
         run: |
           set -uo pipefail
           command -v dig >/dev/null || sudo apt-get install -y -qq dnsutils >/dev/null
@@ -241,7 +241,7 @@ jobs:
           script: rm -rf /tmp/naza_deploy; sudo -n rm -f /tmp/naza-acme/key 2>/dev/null || true
 
       - name: External check (real DNS)
-        if: steps.act.outputs.action != 'cert-dns' && steps.act.outputs.action != 'dns-show'
+        if: steps.act.outputs.action != 'cert-dns' && steps.act.outputs.action != 'dns-show' && steps.act.outputs.action != 'dns-switch'
         env:
           STRICT: ${{ steps.act.outputs.cert }}
         run: |
