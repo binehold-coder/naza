@@ -202,7 +202,7 @@ jobs:
       - name: DNS — wait until public resolvers see the server
         if: steps.act.outputs.action == 'migrate'
         run: |
-          set -uo pipefail
+          set +e
           command -v dig >/dev/null || sudo apt-get install -y -qq dnsutils >/dev/null
           ns="$(dig +short NS naza-couture.fr @1.1.1.1 | sed 's/\.$//')"
           bad="?"
