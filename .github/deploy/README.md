@@ -1,5 +1,8 @@
 # Deploy to IONOS VPS (replaces Vercel)
 
+Status (23 Nov 2026): live on the VPS. DNS zone is at IONOS (nameservers switched back from
+`ns*.vercel-dns.com`), `@`/`www` A → 87.106.25.155, certificate renewed via HTTP-01 webroot.
+
 Workflow: `.github/workflows/deploy-server.yml`. Server script: `server.sh`.
 
 - Push to `main` → GitHub Actions runs `build.py`, uploads `preview-site/` over SSH,
